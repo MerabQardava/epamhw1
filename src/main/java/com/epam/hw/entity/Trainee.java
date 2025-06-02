@@ -1,9 +1,6 @@
-package spring_mod2.task1.Entities;
-
-import org.springframework.beans.factory.annotation.Autowired;
+package com.epam.hw.entity;
 
 import java.time.LocalDate;
-import java.util.Map;
 
 public class Trainee extends User {
     private LocalDate dateOfBirth;

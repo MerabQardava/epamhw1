@@ -1,23 +1,20 @@
-package spring_mod2.task1;
+package com.epam.hw.dao;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import spring_mod2.task1.DAO.TrainerDAO;
-import spring_mod2.task1.DAO.TrainingDAO;
-import spring_mod2.task1.Entities.Trainee;
-import spring_mod2.task1.Entities.Trainer;
-import spring_mod2.task1.Entities.Training;
+import com.epam.hw.dao.TrainingDao;
+import com.epam.hw.entity.Training;
 
 import java.time.LocalDate;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class TrainingDAOTest {
-    private TrainingDAO trainingDAO;
+public class TrainingDaoTest {
+    private TrainingDao trainingDAO;
 
     @BeforeEach
     void setUp() {
-        trainingDAO = new TrainingDAO(new java.util.HashMap<>());
+        trainingDAO = new TrainingDao(new java.util.HashMap<>());
     }
 
     @Test

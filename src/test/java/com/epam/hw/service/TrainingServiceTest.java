@@ -1,12 +1,10 @@
-package spring_mod2.task1;
+package com.epam.hw.service;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import spring_mod2.task1.DAO.TrainingDAO;
-import spring_mod2.task1.Entities.Trainee;
-import spring_mod2.task1.Entities.Trainer;
-import spring_mod2.task1.Entities.Training;
-import spring_mod2.task1.Services.TrainingService;
+import com.epam.hw.dao.TrainingDao;
+import com.epam.hw.entity.Training;
+import com.epam.hw.service.TrainingService;
 
 import java.time.LocalDate;
 
@@ -16,11 +14,11 @@ import static org.mockito.Mockito.*;
 
 public class TrainingServiceTest {
     TrainingService trainingService;
-    TrainingDAO trainingDAO;
+    TrainingDao trainingDAO;
 
     @BeforeEach
     void setUp() {
-        trainingDAO = mock(TrainingDAO.class);
+        trainingDAO = mock(TrainingDao.class);
         trainingService = new TrainingService(trainingDAO);
     }
 

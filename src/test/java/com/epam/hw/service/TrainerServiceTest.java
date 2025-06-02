@@ -1,25 +1,23 @@
-package spring_mod2.task1;
+package com.epam.hw.service;
 
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import spring_mod2.task1.DAO.TrainerDAO;
-import spring_mod2.task1.Entities.Trainer;
-import spring_mod2.task1.Services.TrainerService;
-
-import java.util.Collections;
+import com.epam.hw.dao.TrainerDao;
+import com.epam.hw.entity.Trainer;
+import com.epam.hw.service.TrainerService;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class TrainerServiceTest {
 
-    private TrainerDAO trainerDAO;
+    private TrainerDao trainerDAO;
     private TrainerService trainerService;
 
     @BeforeEach
     void setUp() {
-        trainerDAO = mock(TrainerDAO.class);
+        trainerDAO = mock(TrainerDao.class);
 //        when(trainerDAO.getAll()).thenReturn(Collections.emptyList());
         trainerService = new TrainerService(trainerDAO);
     }

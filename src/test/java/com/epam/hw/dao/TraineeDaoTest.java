@@ -1,23 +1,20 @@
-package spring_mod2.task1;
+package com.epam.hw.dao;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import spring_mod2.task1.DAO.TraineeDAO;
-import spring_mod2.task1.Entities.Trainee;
-import spring_mod2.task1.Entities.Trainer;
-import spring_mod2.task1.Services.TraineeService;
+import com.epam.hw.dao.TraineeDao;
+import com.epam.hw.entity.Trainee;
 
 import java.time.LocalDate;
-import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class TraineeDAOTest {
-    private TraineeDAO traineeDAO;
+public class TraineeDaoTest {
+    private TraineeDao traineeDAO;
 
     @BeforeEach
     void setUp() {
-        traineeDAO = new TraineeDAO(new java.util.HashMap<>());
+        traineeDAO = new TraineeDao(new java.util.HashMap<>());
     }
 
     @Test

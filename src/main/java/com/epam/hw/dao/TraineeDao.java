@@ -1,19 +1,19 @@
-package spring_mod2.task1.DAO;
+package com.epam.hw.dao;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
-import spring_mod2.task1.Entities.Trainee;
+import com.epam.hw.entity.Trainee;
 
 import java.util.*;
 
 @Repository
-public class TraineeDAO {
+public class TraineeDao {
     private final Map<Integer, Trainee> storage;
-    private static final Logger logger = LoggerFactory.getLogger(TraineeDAO.class);
+    private static final Logger logger = LoggerFactory.getLogger(TraineeDao.class);
     @Autowired
-    public TraineeDAO(Map<Integer, Trainee> traineeStorage) {
+    public TraineeDao(Map<Integer, Trainee> traineeStorage) {
         this.storage = traineeStorage;
     }
 

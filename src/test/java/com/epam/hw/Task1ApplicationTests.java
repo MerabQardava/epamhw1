@@ -1,4 +1,4 @@
-package spring_mod2.task1;
+package com.epam.hw;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

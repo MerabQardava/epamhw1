@@ -1,20 +1,18 @@
-package spring_mod2.task1.Services;
+package com.epam.hw.service;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import spring_mod2.task1.DAO.TrainerDAO;
-import spring_mod2.task1.Entities.Trainee;
-import spring_mod2.task1.Entities.Trainer;
+import com.epam.hw.dao.TrainerDao;
+import com.epam.hw.entity.Trainer;
 
-import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
 
 @Service
 public class TrainerService {
-    TrainerDAO trainerDAO;
+    TrainerDao trainerDAO;
     private final Set<Integer> ids = new HashSet<>();
     private final Set<String> existingUsernames = new HashSet<>();
     private static int idSequence = 1;
@@ -22,7 +20,7 @@ public class TrainerService {
     public static final Logger logger = LoggerFactory.getLogger(TrainerService.class);
 
     @Autowired
-    public TrainerService(TrainerDAO trainerDAO) {
+    public TrainerService(TrainerDao trainerDAO) {
         this.trainerDAO = trainerDAO;
 
         existingUsernames.clear();

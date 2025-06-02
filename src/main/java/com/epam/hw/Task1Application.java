@@ -1,18 +1,10 @@
-package spring_mod2.task1;
+package com.epam.hw;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.PropertySource;
-import spring_mod2.task1.DAO.TraineeDAO;
-import spring_mod2.task1.Entities.Trainee;
-import spring_mod2.task1.Entities.Trainer;
-import spring_mod2.task1.Entities.Training;
-import spring_mod2.task1.Services.TraineeService;
-import spring_mod2.task1.Services.TrainingService;
+import com.epam.hw.entity.Trainee;
 
-import java.util.HashMap;
 import java.util.Map;
 
 @SpringBootApplication

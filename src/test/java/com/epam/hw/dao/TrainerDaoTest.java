@@ -1,22 +1,21 @@
-package spring_mod2.task1;
+package com.epam.hw.dao;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import spring_mod2.task1.DAO.TrainerDAO;
-import spring_mod2.task1.Entities.Trainer;
+import com.epam.hw.dao.TrainerDao;
+import com.epam.hw.entity.Trainer;
 
 
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-public class TrainerDAOTest {
-    private TrainerDAO trainerDAO;
+public class TrainerDaoTest {
+    private TrainerDao trainerDAO;
 
     @BeforeEach
     void setUp() {
-        trainerDAO = new TrainerDAO(new java.util.HashMap<>());
+        trainerDAO = new TrainerDao(new java.util.HashMap<>());
     }
 
     @Test

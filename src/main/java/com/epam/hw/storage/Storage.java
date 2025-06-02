@@ -1,12 +1,11 @@
-package spring_mod2.task1.Storage;
+package com.epam.hw.storage;
 
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.stereotype.Component;
-import spring_mod2.task1.Entities.Trainee;
-import spring_mod2.task1.Entities.Trainer;
-import spring_mod2.task1.Entities.Training;
+import com.epam.hw.entity.Trainee;
+import com.epam.hw.entity.Trainer;
+import com.epam.hw.entity.Training;
 
 import java.util.HashMap;
 import java.util.Map;

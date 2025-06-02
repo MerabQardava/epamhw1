@@ -1,4 +1,4 @@
-package spring_mod2.task1.Entities;
+package com.epam.hw.entity;
 
 import java.util.UUID;
 

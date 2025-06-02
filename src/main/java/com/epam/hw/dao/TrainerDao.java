@@ -1,21 +1,21 @@
-package spring_mod2.task1.DAO;
+package com.epam.hw.dao;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Repository;
-import spring_mod2.task1.Entities.Trainer;
+import com.epam.hw.entity.Trainer;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 @Repository
-public class TrainerDAO {
-    private static final Logger logger = LoggerFactory.getLogger(TrainerDAO.class);
+public class TrainerDao {
+    private static final Logger logger = LoggerFactory.getLogger(TrainerDao.class);
 
     private final Map<Integer, Trainer> storage;
 
-    public TrainerDAO(Map<Integer, Trainer> trainerStorage) {
+    public TrainerDao(Map<Integer, Trainer> trainerStorage) {
         this.storage = trainerStorage;
     }
 

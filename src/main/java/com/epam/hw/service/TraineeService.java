@@ -1,29 +1,28 @@
-package spring_mod2.task1.Services;
+package com.epam.hw.service;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import spring_mod2.task1.DAO.TraineeDAO;
-import spring_mod2.task1.Entities.Trainee;
+import com.epam.hw.dao.TraineeDao;
+import com.epam.hw.entity.Trainee;
 
 
 import java.time.LocalDate;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 @Service
 public class TraineeService {
     private static final Logger logger = LoggerFactory.getLogger(TraineeService.class);
 
-    private final TraineeDAO traineeDAO;
+    private final TraineeDao traineeDAO;
     private final Set<String> existingUsernames = new HashSet<>();
     private final Set<Integer> ids = new HashSet<>();
     private static int idSequence = 1;
 
     @Autowired
-    public TraineeService(TraineeDAO traineeDAO) {
+    public TraineeService(TraineeDao traineeDAO) {
         this.traineeDAO = traineeDAO;
         refreshUsernames();
 
