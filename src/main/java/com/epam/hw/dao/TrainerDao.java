@@ -1,5 +1,6 @@
 package com.epam.hw.dao;
 
+import com.epam.hw.entity.Trainee;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Repository;
@@ -12,7 +13,7 @@ import java.util.Map;
 @Repository
 public class TrainerDao {
     private static final Logger logger = LoggerFactory.getLogger(TrainerDao.class);
-
+    private Integer id = 1;
     private final Map<Integer, Trainer> storage;
 
     public TrainerDao(Map<Integer, Trainer> trainerStorage) {
@@ -21,8 +22,14 @@ public class TrainerDao {
 
     public void save(Trainer trainer) {
         logger.info("Saving trainer with ID: {}", trainer.getUserId());
-        storage.put(trainer.getUserId(), trainer);
+        while(storage.containsKey(id)){
+            id++;
+        }
+        trainer.setUserId(id);
+        trainer.setUsername(getUniqueUsername(trainer));
+        storage.put(id, trainer);
         logger.debug("Trainer saved: {}", trainer);
+        id++;
     }
 
     public Trainer get(int id) {
@@ -34,10 +41,6 @@ public class TrainerDao {
         return trainer;
     }
 
-    public List<Trainer> getAll() {
-        logger.debug("Retrieving all trainers");
-        return new ArrayList<>(storage.values());
-    }
 
     public void update(Trainer trainer) {
         int id = trainer.getUserId();
@@ -48,6 +51,23 @@ public class TrainerDao {
         logger.info("Updating trainer with ID: {}", id);
         storage.put(id, trainer);
         logger.debug("Trainer updated: {}", trainer);
+    }
+
+    private String getUniqueUsername(Trainer trainee) {
+        final String baseUsername = trainee.getUsername();
+        int counter = 1;
+
+        if (storage.values().stream().noneMatch(user -> user.getUsername().equals(baseUsername))) {
+            return baseUsername;
+        }
+
+        while (true) {
+            final String candidateUsername = baseUsername + counter;
+            if (storage.values().stream().noneMatch(user -> user.getUsername().equals(candidateUsername))) {
+                return candidateUsername;
+            }
+            counter++;
+        }
     }
 
 }

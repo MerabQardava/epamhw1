@@ -26,7 +26,7 @@ public class StorageInitializer implements BeanPostProcessor {
     @Override
     public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
         if ("traineeStorage".equals(beanName) && bean instanceof Map) {
-            Map<String, Trainee> storage = (Map<String, Trainee>) bean;
+            Map<Integer, Trainee> storage = (Map<Integer, Trainee>) bean;
 
             int index = 1;
             while (true) {
@@ -40,7 +40,7 @@ public class StorageInitializer implements BeanPostProcessor {
                 LocalDate dob = LocalDate.parse(env.getProperty(prefix + ".dateOfBirth"));
 
                 Trainee trainee = new Trainee(firstName, lastName, dob, address, userId);
-                storage.put(userId.toString(), trainee);
+                storage.put(userId, trainee);
 
                 logger.debug("Loaded Trainee from properties: id={}, name={} {}", userId, firstName, lastName);
 

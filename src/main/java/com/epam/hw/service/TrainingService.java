@@ -17,19 +17,13 @@ public class TrainingService {
     private static final Logger logger = LoggerFactory.getLogger(TrainingService.class);
 
     TrainingDao trainingDAO;
-    private final Set<Integer> ids = new HashSet<>();
 
     @Autowired
     public TrainingService(TrainingDao trainingDAO) {
         this.trainingDAO = trainingDAO;
 
-        ids.clear();
 
-        trainingDAO.getAll().forEach(t -> {
-            ids.add(t.getTraineeId());
-        });
-
-        logger.info("TrainingService initialized with {} trainee IDs", ids.size());
+        logger.info("TrainingService initialized");
     }
 
     public Training create(Integer traineeId,Integer trainerId, String trainingName,String trainingType,String date,String duration) {

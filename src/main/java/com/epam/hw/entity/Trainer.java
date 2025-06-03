@@ -13,6 +13,11 @@ public class Trainer extends User{
         this.userId = userId;
     }
 
+    public Trainer(String firstName, String lastName, Integer specializationId) {
+        super(firstName, lastName);
+        this.specializationId = specializationId;
+    }
+
     @Override
     public String toString() {
         return "Trainer{" +

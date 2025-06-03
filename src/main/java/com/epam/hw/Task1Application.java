@@ -1,5 +1,8 @@
 package com.epam.hw;
 
+import com.epam.hw.entity.Trainer;
+import com.epam.hw.service.TraineeService;
+import com.epam.hw.service.TrainerService;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.PropertySource;
@@ -13,9 +16,7 @@ public class Task1Application {
 
 	public static void main(String[] args) {
 		var context = SpringApplication.run(Task1Application.class, args);
-		Map<String, Trainee> traineeStorage = context.getBean("traineeStorage", Map.class);
 
-		System.out.println(traineeStorage.toString());
 
 	}
 }

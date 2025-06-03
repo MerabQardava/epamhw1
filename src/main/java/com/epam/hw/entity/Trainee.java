@@ -13,8 +13,12 @@ public class Trainee extends User {
         this.dateOfBirth = dateOfBirth;
         this.address = address;
         this.userId = UserId;
+    }
 
-
+    public Trainee(String firstName, String lastName, LocalDate dateOfBirth, String address) {
+        super(firstName, lastName);
+        this.dateOfBirth = dateOfBirth;
+        this.address = address;
     }
 
     public Integer getUserId() {

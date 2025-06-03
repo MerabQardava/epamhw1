@@ -12,6 +12,8 @@ import java.util.*;
 public class TraineeDao {
     private final Map<Integer, Trainee> storage;
     private static final Logger logger = LoggerFactory.getLogger(TraineeDao.class);
+    private Integer id = 1;
+
     @Autowired
     public TraineeDao(Map<Integer, Trainee> traineeStorage) {
         this.storage = traineeStorage;
@@ -20,8 +22,14 @@ public class TraineeDao {
 
     public void save(Trainee trainee) {
         logger.info("Saving trainee with ID: {}", trainee.getUserId());
-        storage.put(trainee.getUserId(), trainee);
+        while(storage.containsKey(id)){
+            id++;
+        }
+        trainee.setUserId(id);
+        trainee.setUsername(getUniqueUsername(trainee));
+        storage.put(id, trainee);
         logger.debug("Trainee saved: {}", trainee);
+        id++;
     }
 
     public void delete(int id) {
@@ -52,8 +60,22 @@ public class TraineeDao {
         return trainee;
     }
 
-    public List<Trainee> getAll() {
-        return new ArrayList<>(storage.values());
+    private String getUniqueUsername(Trainee trainee) {
+        final String baseUsername = trainee.getUsername();
+        int counter = 1;
+
+        if (storage.values().stream().noneMatch(user -> user.getUsername().equals(baseUsername))) {
+            return baseUsername;
+        }
+
+        while (true) {
+            final String candidateUsername = baseUsername + counter;
+            if (storage.values().stream().noneMatch(user -> user.getUsername().equals(candidateUsername))) {
+                return candidateUsername;
+            }
+            counter++;
+        }
     }
+
 }
 
