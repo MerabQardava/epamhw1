@@ -16,7 +16,5 @@ public class Task1Application {
 
 	public static void main(String[] args) {
 		var context = SpringApplication.run(Task1Application.class, args);
-
-
 	}
 }

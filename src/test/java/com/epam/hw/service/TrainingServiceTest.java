@@ -1,5 +1,6 @@
 package com.epam.hw.service;
 
+import com.epam.hw.dto.TrainingDto;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import com.epam.hw.dao.TrainingDao;
@@ -25,7 +26,8 @@ public class TrainingServiceTest {
 
     @Test
     void testCreateTraining() {
-        Training training = trainingService.create(1, 2, "Learn Java", "Java", "2025-02-03", "20days");
+        TrainingDto trainingData=new TrainingDto(1, 2, "Learn Java", "Java", "2025-02-03", "20days");
+        Training training = trainingService.create(trainingData);
 
         assertNotNull(training);
         assertEquals("Learn Java",training.getTrainingName());
@@ -40,14 +42,16 @@ public class TrainingServiceTest {
 
     @Test
     void testUpdateTraining() {
-        Training training = trainingService.create(1, 2, "Learn Java", "Java", "2025-02-03", "20days");
+        TrainingDto trainingDto = new TrainingDto(1, 2, "Learn Java", "Java", "2025-02-03", "20days");
+        Training training = trainingService.create(trainingDto);
         trainingDAO.update(training);
         verify(trainingDAO, times(1)).save(any(Training.class));
     }
 
     @Test
     void testGetTrainer() {
-        Training training = trainingService.create(1, 2, "Learn Java", "Java", "2025-02-03", "20days");
+        TrainingDto trainingData = new TrainingDto(1, 2, "Learn Java", "Java", "2025-02-03", "20days");
+        Training training = trainingService.create(trainingData);
         when(trainingDAO.get("Learn Java")).thenReturn(training);
 
         Training result = trainingService.get("Learn Java");

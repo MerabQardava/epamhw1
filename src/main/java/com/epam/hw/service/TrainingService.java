@@ -1,6 +1,7 @@
 package com.epam.hw.service;
 
 
+import com.epam.hw.dto.TrainingDto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,11 +27,18 @@ public class TrainingService {
         logger.info("TrainingService initialized");
     }
 
-    public Training create(Integer traineeId,Integer trainerId, String trainingName,String trainingType,String date,String duration) {
-        Training training = new Training(traineeId,trainerId,trainingName,trainingType, LocalDate.parse(date),duration);
+    public Training create(TrainingDto trainingDTO) {
+        Training training = new Training(
+                trainingDTO.traineeId(),
+                trainingDTO.trainerId(),
+                trainingDTO.trainingName(),
+                trainingDTO.trainingType(),
+                LocalDate.parse(trainingDTO.date()),
+                trainingDTO.duration()
+        );
         trainingDAO.save(training);
 
-        logger.info("Created Training with name={}", trainingName);
+        logger.info("Created Training with name={}", training.getTrainingName());
         return training;
     }
 
