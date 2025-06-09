@@ -21,12 +21,12 @@ public class TraineeDao {
 
 
     public void save(Trainee trainee) {
-        logger.info("Saving trainee with ID: {}", trainee.getUserId());
+        logger.info("Saving trainee with ID: {}", trainee.getId());
         while(storage.containsKey(id)){
             id++;
         }
-        trainee.setUserId(id);
-        trainee.setUsername(getUniqueUsername(trainee));
+        trainee.setId(id);
+        trainee.getUser().setUsername(getUniqueUsername(trainee));
         storage.put(id, trainee);
         logger.debug("Trainee saved: {}", trainee);
         id++;
@@ -41,7 +41,7 @@ public class TraineeDao {
         }
     }
     public void update(Trainee trainee) {
-        int id = trainee.getUserId();
+        int id = trainee.getId();
         if (!storage.containsKey(id)) {
             logger.warn("Cannot update - trainee with ID {} does not exist", id);
             return;
@@ -61,16 +61,16 @@ public class TraineeDao {
     }
 
     private String getUniqueUsername(Trainee trainee) {
-        final String baseUsername = trainee.getUsername();
+        final String baseUsername = trainee.getUser().getUsername();
         int counter = 1;
 
-        if (storage.values().stream().noneMatch(user -> user.getUsername().equals(baseUsername))) {
+        if (storage.values().stream().noneMatch(user -> user.getUser().getUsername().equals(baseUsername))) {
             return baseUsername;
         }
 
         while (true) {
             final String candidateUsername = baseUsername + counter;
-            if (storage.values().stream().noneMatch(user -> user.getUsername().equals(candidateUsername))) {
+            if (storage.values().stream().noneMatch(user -> user.getUser().getUsername().equals(candidateUsername))) {
                 return candidateUsername;
             }
             counter++;

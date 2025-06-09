@@ -1,61 +1,51 @@
 package com.epam.hw.entity;
 
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 import java.time.LocalDate;
 
-public class Trainee extends User {
+
+@Setter
+@Getter
+@NoArgsConstructor
+@Entity
+public class Trainee{
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
+
     private LocalDate dateOfBirth;
+
     private String address;
-    private Integer userId;
 
+    @OneToOne
+    @JoinColumn(name = "user_id", nullable = false,unique = true)
+    private User user;
 
-    public Trainee(String firstName, String lastName, LocalDate dateOfBirth, String address,Integer UserId) {
-        super(firstName, lastName);
+    public Trainee(LocalDate dateOfBirth, String address, User user) {
         this.dateOfBirth = dateOfBirth;
         this.address = address;
-        this.userId = UserId;
+        this.user = user;
+        this.user.setTrainee(this);
     }
 
-    public Trainee(String firstName, String lastName, LocalDate dateOfBirth, String address) {
-        super(firstName, lastName);
-        this.dateOfBirth = dateOfBirth;
-        this.address = address;
-    }
 
-    public Integer getUserId() {
-        return userId;
-    }
-
-    public void setUserId(Integer userId) {
-        this.userId = userId;
-    }
-
-    public LocalDate getDateOfBirth() {
-        return dateOfBirth;
-    }
-
-    public void setDateOfBirth(LocalDate dateOfBirth) {
-        this.dateOfBirth = dateOfBirth;
-    }
-
-    public String getAddress() {
-        return address;
-    }
-
-    public void setAddress(String address) {
-        this.address = address;
-    }
 
     @Override
     public String toString() {
         return "Trainee{" +
                 "dateOfBirth=" + dateOfBirth +
                 ", address='" + address + '\'' +
-                ", UserId=" + userId +
-                ", firstName='" + firstName + '\'' +
-                ", lastName='" + lastName + '\'' +
-                ", username='" + username + '\'' +
-                ", password='" + password + '\'' +
-                ", isActive=" + isActive +
+                ", UserId=" + id +
+                ", firstName='" + user.getFirstName() + '\'' +
+                ", lastName='" + user.getLastName() + '\'' +
+                ", username='" + user.getUsername() + '\'' +
+                ", password='" + user.getPassword() + '\'' +
+                ", isActive=" + user.isActive +
                 '}';
     }
 }

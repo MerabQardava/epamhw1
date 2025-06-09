@@ -1,13 +1,36 @@
 package com.epam.hw.entity;
 
+import jakarta.persistence.*;
+
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 import java.util.UUID;
 
-public abstract class User {
+
+@Getter
+@Setter
+@NoArgsConstructor
+@Entity
+@Table(name = "users")
+public class User {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    protected Integer userId;
+
     protected String firstName;
     protected String lastName;
     protected String username;
     protected String password;
     protected boolean isActive = true;
+
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+    private Trainee trainee;
+
+    @OneToOne(mappedBy = "user",cascade = CascadeType.ALL)
+    private Trainer trainer;
 
     public User(String firstName, String lastName) {
         this.firstName = firstName;
@@ -24,43 +47,4 @@ public abstract class User {
         return UUID.randomUUID().toString().replace("-", "").substring(0, 10);
     }
 
-    public String getFirstName() {
-        return firstName;
-    }
-
-    public void setFirstName(String firstName) {
-        this.firstName = firstName;
-    }
-
-    public String getLastName() {
-        return lastName;
-    }
-
-    public void setLastName(String lastName) {
-        this.lastName = lastName;
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public boolean isActive() {
-        return isActive;
-    }
-
-    public void setActive(boolean active) {
-        isActive = active;
-    }
 }

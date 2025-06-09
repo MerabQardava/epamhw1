@@ -1,49 +1,48 @@
 package com.epam.hw.entity;
 
 
+import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-public class Trainer extends User{
+@Setter
+@Getter
+@NoArgsConstructor
+@Entity
+public class Trainer{
 
-    public Integer specializationId;
-    public Integer userId;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
 
-    public Trainer(String firstName, String lastName, Integer specializationId, Integer userId) {
-        super(firstName, lastName);
+    @ManyToOne
+    @JoinColumn(name="specializationId")
+    public TrainingType specializationId;
+
+    @OneToOne
+    @JoinColumn(name="user_id", nullable=false, unique = true)
+    public User user;
+
+    public Trainer(TrainingType specializationId, User user) {
         this.specializationId = specializationId;
-        this.userId = userId;
+        this.user = user;
     }
 
-    public Trainer(String firstName, String lastName, Integer specializationId) {
-        super(firstName, lastName);
-        this.specializationId = specializationId;
-    }
+
+
 
     @Override
     public String toString() {
         return "Trainer{" +
                 "specializationId=" + specializationId +
-                ", userId=" + userId +
-                ", firstName='" + firstName + '\'' +
-                ", lastName='" + lastName + '\'' +
-                ", username='" + username + '\'' +
-                ", password='" + password + '\'' +
-                ", isActive=" + isActive +
+                ", userId=" + user.getUserId()+
+                ", firstName='" + user.getFirstName() + '\'' +
+                ", lastName='" + user.getLastName() + '\'' +
+                ", username='" + user.getUsername() + '\'' +
+                ", password='" + user.getPassword() + '\'' +
+                ", isActive=" + user.isActive +
                 '}';
     }
 
-    public Integer getSpecializationId() {
-        return specializationId;
-    }
-
-    public void setSpecializationId(Integer specializationId) {
-        this.specializationId = specializationId;
-    }
-
-    public Integer getUserId() {
-        return userId;
-    }
-
-    public void setUserId(Integer userId) {
-        this.userId = userId;
-    }
 }
