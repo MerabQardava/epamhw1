@@ -20,11 +20,16 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     protected Integer userId;
 
-    protected String firstName;
-    protected String lastName;
-    protected String username;
-    protected String password;
-    protected boolean isActive = true;
+    @Column(nullable = false)
+    private String firstName;
+    @Column(nullable = false)
+    private String lastName;
+    @Column(nullable = false)
+    private String username;
+    @Column(nullable = false)
+    private String password;
+    @Column(nullable = false)
+    private boolean isActive = true;
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
     private Trainee trainee;

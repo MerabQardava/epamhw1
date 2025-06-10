@@ -45,7 +45,7 @@ public class Trainee{
                 ", lastName='" + user.getLastName() + '\'' +
                 ", username='" + user.getUsername() + '\'' +
                 ", password='" + user.getPassword() + '\'' +
-                ", isActive=" + user.isActive +
+                ", isActive=" + user.isActive() +
                 '}';
     }
 }

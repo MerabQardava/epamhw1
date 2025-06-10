@@ -1,8 +1,6 @@
 package com.epam.hw;
 
-import com.epam.hw.entity.Trainer;
-import com.epam.hw.entity.TrainingType;
-import com.epam.hw.entity.User;
+import com.epam.hw.entity.*;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
@@ -10,7 +8,6 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.context.annotation.PropertySource;
-import com.epam.hw.entity.Trainee;
 
 import java.time.LocalDate;
 
@@ -28,13 +25,19 @@ public class Task1Application {
 			em.getTransaction().begin();
 
 			User user = new User("Merab", "Kardava");
-//			Trainee trainee = new Trainee(LocalDate.of(1999, 1, 1), "Tbilisi", user);
+			User user2= new User("Giorgi", "mech");
+			Trainee trainee = new Trainee(LocalDate.of(1999, 1, 1), "Tbilisi", user2);
 			TrainingType trainingType = new TrainingType("Java");
 			Trainer trainer = new Trainer(trainingType,user);
 
-			em.persist(trainingType);
+			Training training = new Training(trainee, trainer, "Java Basics", trainingType, LocalDate.of(2023, 10, 1), "2 hours");
+
+			em.persist(user2);
 			em.persist(user);
+			em.persist(trainee);
+			em.persist(trainingType);
 			em.persist(trainer);
+			em.persist(training);
 
 			em.getTransaction().commit();
 		} catch (Exception e) {
