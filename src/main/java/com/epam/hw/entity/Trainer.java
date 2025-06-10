@@ -6,6 +6,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.HashSet;
+import java.util.Set;
+
 @Setter
 @Getter
 @NoArgsConstructor
@@ -18,11 +21,14 @@ public class Trainer{
 
     @ManyToOne
     @JoinColumn(name="specializationId")
-    public TrainingType specializationId;
+    private  TrainingType specializationId;
 
-    @OneToOne
+    @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name="user_id", nullable=false, unique = true)
-    public User user;
+    private User user;
+
+    @ManyToMany(mappedBy = "trainers")
+    private Set<Trainee> trainees = new HashSet<>();
 
     public Trainer(TrainingType specializationId, User user) {
         this.specializationId = specializationId;
