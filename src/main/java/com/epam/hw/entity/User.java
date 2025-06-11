@@ -31,10 +31,10 @@ public class User {
     @Column(nullable = false)
     private boolean isActive = true;
 
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private Trainee trainee;
 
-    @OneToOne(mappedBy = "user",cascade = CascadeType.ALL)
+    @OneToOne(mappedBy = "user",cascade = CascadeType.ALL, orphanRemoval = true)
     private Trainer trainer;
 
     public User(String firstName, String lastName) {

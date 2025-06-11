@@ -37,6 +37,10 @@ public class Trainee{
     )
     private Set<Trainer> trainers = new HashSet<>();
 
+
+    @OneToMany(mappedBy = "trainee", cascade = CascadeType.ALL)
+    private List<Training> trainings = new ArrayList<>();
+
     public Trainee(LocalDate dateOfBirth, String address, User user) {
         this.dateOfBirth = dateOfBirth;
         this.address = address;
