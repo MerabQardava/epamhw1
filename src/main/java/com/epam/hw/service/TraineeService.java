@@ -2,33 +2,55 @@ package com.epam.hw.service;
 
 import com.epam.hw.entity.Trainee;
 import com.epam.hw.entity.Trainer;
+import com.epam.hw.entity.Training;
 import com.epam.hw.entity.User;
 import com.epam.hw.repository.TraineeRepository;
 
 import com.epam.hw.repository.TrainerRepository;
+import com.epam.hw.repository.TrainingRepository;
 import com.epam.hw.repository.UserRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
 
 @Service
+@Transactional
 public class TraineeService {
     private final TraineeRepository traineeRepository;
     private final UserRepository userRepository;
     private final TrainerRepository trainerRepository;
+    private final TrainingRepository trainingRepository;
 
     private Trainee loggedInTrainee = null;
 
     @Autowired
-    public TraineeService(TraineeRepository traineeRepository, UserRepository userRepository,TrainerRepository trainerRepository) {
+    public TraineeService(TraineeRepository traineeRepository, UserRepository userRepository,TrainerRepository trainerRepository, TrainingRepository trainingRepository
+    ) {
+        this.trainingRepository=trainingRepository;
         this.traineeRepository = traineeRepository;
         this.userRepository = userRepository;
         this.trainerRepository = trainerRepository;
 
+    }
+
+    public Trainee getTraineeByUsername(String username) {
+        if (loggedInTrainee == null) {
+            throw new IllegalStateException("No trainee is logged in.");
+        }
+
+        Optional<User> optionalUser = userRepository.findByUsername(username);
+        if (optionalUser.isPresent()) {
+            User user = optionalUser.get();
+            return user.getTrainee();
+        }
+        return null;
     }
 
     public void createTrainee(Trainee trainee) {
@@ -152,38 +174,52 @@ public class TraineeService {
             throw new IllegalStateException("No trainee is logged in.");
         }
 
-        Optional<Trainee> optTrainee = traineeRepository.findById(traineeId);
-        if (optTrainee.isEmpty()) {
-            return false;
-        }
+        Trainee trainee = traineeRepository.findById(traineeId)
+                .orElseThrow(() -> new IllegalArgumentException("Trainee not found"));
 
-        Trainee trainee = optTrainee.get();
+        Set<Trainer> newTrainers = new HashSet<>(trainerRepository.findAllById(newTrainerIds));
 
-        Set<Trainer> trainers = new HashSet<>(trainerRepository.findAllById(newTrainerIds));
+        trainee.getTrainers().stream()
+                .filter(t -> !newTrainers.contains(t))
+                .forEach(trainee::removeTrainer);
 
-        trainee.setTrainers(trainers);
-
-        traineeRepository.save(trainee);
+        newTrainers.forEach(trainee::addTrainer);
 
         return true;
     }
 
     public void addTrainerToTrainee(Integer traineeId, Integer trainerId) {
-        Trainee trainee = traineeRepository.findById(traineeId).orElseThrow();
-        Trainer trainer = trainerRepository.findById(trainerId).orElseThrow();
-        trainee.getTrainers().add(trainer);
-        traineeRepository.save(trainee);
+        if (loggedInTrainee == null) {
+            throw new IllegalStateException("No trainee is logged in.");
+        }
+
+        Trainee trainee  = traineeRepository.findById(traineeId).orElseThrow();
+        Trainer trainer  = trainerRepository.findById(trainerId).orElseThrow();
+
+        trainee.addTrainer(trainer);
     }
 
     public void removeTrainerFromTrainee(Integer traineeId, Integer trainerId) {
+        if (loggedInTrainee == null) {
+            throw new IllegalStateException("No trainee is logged in.");
+        }
+
         Trainee trainee = traineeRepository.findById(traineeId).orElseThrow();
         Trainer trainer = trainerRepository.findById(trainerId).orElseThrow();
-        trainee.getTrainers().remove(trainer);
-        traineeRepository.save(trainee);
+
+        trainee.removeTrainer(trainer);
     }
 
-    //TODO Get Trainee Trainings List by trainee username and criteria (from date, to date, trainer
-    //name, training type).
+    public List<Training> getTraineeTrainings(
+            String username,
+            LocalDate from,
+            LocalDate to,
+            String trainerName,
+            String trainingTypeName) {
+
+        return trainingRepository.findTrainingsByCriteria(
+                username, from, to, trainerName, trainingTypeName);
+    }
 
 
 

@@ -1,56 +1,44 @@
-//package com.epam.hw.service;
-//
-//
-//import com.epam.hw.dto.TrainingDto;
-//import org.slf4j.Logger;
-//import org.slf4j.LoggerFactory;
-//import org.springframework.beans.factory.annotation.Autowired;
-//import org.springframework.stereotype.Service;
-//import com.epam.hw.dao.TrainingDao;
-//import com.epam.hw.entity.Training;
-//
-//import java.time.LocalDate;
-//import java.util.HashSet;
-//import java.util.Set;
-//
-//@Service
-//public class TrainingService {
-//    private static final Logger logger = LoggerFactory.getLogger(TrainingService.class);
-//
-//    TrainingDao trainingDAO;
-//
-//    @Autowired
-//    public TrainingService(TrainingDao trainingDAO) {
-//        this.trainingDAO = trainingDAO;
-//
-//
-//        logger.info("TrainingService initialized");
-//    }
-//
-//    public Training create(TrainingDto trainingDTO) {
-//        Training training = new Training(
-//                trainingDTO.traineeId(),
-//                trainingDTO.trainerId(),
-//                trainingDTO.trainingName(),
-//                trainingDTO.trainingType(),
-//                LocalDate.parse(trainingDTO.date()),
-//                trainingDTO.duration()
-//        );
-//        trainingDAO.save(training);
-//
-//        logger.info("Created Training with name={}", training.getTrainingName());
-//        return training;
-//    }
-//
-//    public Training get(String trainingName) {
-//        logger.debug("Fetching Training with name={}", trainingName);
-//        Training training = trainingDAO.get(trainingName);
-//        if (training == null) {
-//            logger.warn("Training with name={} not found", trainingName);
-//        }
-//        return training;
-//    }
-//
-//
-//
-//}
+package com.epam.hw.service;
+
+import com.epam.hw.entity.Trainee;
+import com.epam.hw.entity.Trainer;
+import com.epam.hw.entity.Training;
+import com.epam.hw.entity.TrainingType;
+import com.epam.hw.repository.TraineeRepository;
+import com.epam.hw.repository.TrainerRepository;
+import com.epam.hw.repository.TrainingRepository;
+import com.epam.hw.repository.TrainingTypeRepository;
+import jakarta.transaction.Transactional;
+import org.springframework.stereotype.Service;
+
+import java.time.LocalDate;
+
+
+@Service
+public class TrainingService {
+
+    private final TrainingRepository trainingRepo;
+    private final TraineeRepository traineeRepo;
+    private final TrainerRepository trainerRepo;
+    private final TrainingTypeRepository trainingTypeRepo;
+
+    public TrainingService(TrainingRepository trainingRepo,
+                           TraineeRepository traineeRepo,
+                           TrainerRepository trainerRepo,
+                           TrainingTypeRepository trainingTypeRepo) {
+        this.trainingRepo = trainingRepo;
+        this.traineeRepo = traineeRepo;
+        this.trainerRepo = trainerRepo;
+        this.trainingTypeRepo = trainingTypeRepo;
+    }
+
+    @Transactional
+    public Training addTraining(Integer traineeId, Integer trainerId, String trainingName, Integer trainingTypeId, LocalDate date, Integer duration) {
+        Trainee trainee = traineeRepo.findById(traineeId).orElseThrow(() -> new RuntimeException("Trainee not found"));
+        Trainer trainer = trainerRepo.findById(trainerId).orElseThrow(() -> new RuntimeException("Trainer not found"));
+        TrainingType trainingType = trainingTypeRepo.findById(trainingTypeId).orElseThrow(() -> new RuntimeException("TrainingType not found"));
+
+        Training training = new Training(trainee, trainer, trainingName, trainingType, date, duration);
+        return trainingRepo.save(training);
+    }
+}

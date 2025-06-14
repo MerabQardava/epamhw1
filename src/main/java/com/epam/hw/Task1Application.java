@@ -2,6 +2,8 @@ package com.epam.hw;
 
 import com.epam.hw.entity.*;
 
+import com.epam.hw.service.TraineeService;
+import com.epam.hw.service.TrainingService;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import org.springframework.boot.SpringApplication;
@@ -21,32 +23,24 @@ public class Task1Application {
 		EntityManagerFactory emf = context.getBean(EntityManagerFactory.class);
 		EntityManager em = emf.createEntityManager();
 
-		try {
-			em.getTransaction().begin();
+		TraineeService traineeService = context.getBean(TraineeService.class);
+		TrainingService trainingService = context.getBean(TrainingService.class);
 
-			User user = new User("Merab", "Kardava");
-			User user2= new User("Giorgi", "mech");
-			Trainee trainee = new Trainee(LocalDate.of(1999, 1, 1), "Tbilisi", user2);
-			TrainingType trainingType = new TrainingType("Java");
-			Trainer trainer = new Trainer(trainingType,user);
 
-			Training training = new Training(trainee, trainer, "Java Basics", trainingType, LocalDate.of(2023, 10, 1), "2 hours");
+		User user = new User("John", "Doe");
 
-			em.persist(user2);
-			em.persist(user);
-			em.persist(trainee);
-			em.persist(trainingType);
-			em.persist(trainer);
-			em.persist(training);
+		Trainee trainee = new Trainee( LocalDate.of(1990, 1, 1), "123 Mech St", user);
 
-			em.getTransaction().commit();
-		} catch (Exception e) {
-			em.getTransaction().rollback();
-			throw e;
-		} finally {
-			em.close();
-			emf.close();
-		}
+		System.out.println(traineeService.logIn("John.Doe","amongusi"));
+		System.out.println(traineeService.deleteByUsername("Giorgi.mech"));
+//		System.out.println(traineeService.getTraineeTrainings("John.Doe",
+//				LocalDate.of( 2023, 10, 1),
+//				LocalDate.of( 2023, 10, 31),
+//				"Merab.Kardava","Java").size());
+
+
+
+
 	}
 
 }

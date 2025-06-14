@@ -1,55 +1,41 @@
-//package com.epam.hw.service;
-//
-//import org.slf4j.Logger;
-//import org.slf4j.LoggerFactory;
-//import org.springframework.beans.factory.annotation.Autowired;
-//import org.springframework.stereotype.Service;
-//import com.epam.hw.dao.TrainerDao;
-//import com.epam.hw.entity.Trainer;
-//
-//import java.util.HashSet;
-//import java.util.Set;
-//
-//@Service
-//public class TrainerService {
-//    TrainerDao trainerDAO;
-//
-//    public static final Logger logger = LoggerFactory.getLogger(TrainerService.class);
-//
-//    @Autowired
-//    public TrainerService(TrainerDao trainerDAO) {
-//        this.trainerDAO = trainerDAO;
-//
-//
-//        logger.info("TrainerService initialized");
-//    }
-//
-//    public Trainer create(String firstName, String lastName, Integer specId) {
-//
-//
-//        Trainer trainer = new Trainer(firstName, lastName, specId);
-//
-//        trainerDAO.save(trainer);
-//
-//        logger.info("Created Trainer");
-//        return trainer;
-//    }
-//
-//
-//    public Trainer get(Integer id){
-//        logger.debug("Fetching Trainer with id={}", id);
-//        Trainer trainer = trainerDAO.get(id);
-//        if (trainer == null) {
-//            logger.warn("Trainer with id={} not found", id);
-//        }
-//        return trainer;
-//    }
-//
-//    public void update(Trainer trainer) {
-//        logger.info("Updating Trainer with id={}", trainer.getUserId());
-//        trainerDAO.update(trainer);
-//        logger.debug("Updated Trainer: {}", trainer);
-//    }
-//
-//
-//}
+package com.epam.hw.service;
+
+import com.epam.hw.entity.Trainer;
+import com.epam.hw.repository.TrainerRepository;
+import com.epam.hw.repository.UserRepository;
+import jakarta.transaction.Transactional;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+
+@Service
+@Transactional
+public class TrainerService {
+    TrainerRepository trainerRepository;
+    UserRepository userRepository;
+
+
+
+    @Autowired
+    public TrainerService(TrainerRepository trainerRepository,UserRepository userRepository) {
+        this.trainerRepository = trainerRepository;
+        this.userRepository = userRepository;
+    }
+
+    public Trainer createTrainer(Trainer trainer) {
+        String baseUsername = trainer.getUser().getUsername();
+        int num = 1;
+
+        while (userRepository.findByUsername(trainer.getUser().getUsername()).isPresent()) {
+            trainer.getUser().setUsername(baseUsername + num);
+            num++;
+        }
+
+        trainerRepository.save(trainer);
+        return trainer;
+    }
+
+
+
+
+}

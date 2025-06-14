@@ -48,6 +48,16 @@ public class Trainee{
         this.user.setTrainee(this);
     }
 
+    public void addTrainer(Trainer trainer) {
+        this.trainers.add(trainer);
+        trainer.getTrainees().add(this);
+    }
+
+    public void removeTrainer(Trainer trainer) {
+        this.trainers.remove(trainer);
+        trainer.getTrainees().remove(this);
+    }
+
 
 
     @Override
