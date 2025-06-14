@@ -9,6 +9,7 @@ import com.epam.hw.repository.TraineeRepository;
 import com.epam.hw.repository.TrainerRepository;
 import com.epam.hw.repository.TrainingRepository;
 import com.epam.hw.repository.UserRepository;
+import com.epam.hw.storage.Auth;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -28,22 +29,32 @@ public class TraineeService {
     private final TrainerRepository trainerRepository;
     private final TrainingRepository trainingRepository;
 
-    private Trainee loggedInTrainee = null;
+    private Auth auth;
 
     @Autowired
-    public TraineeService(TraineeRepository traineeRepository, UserRepository userRepository,TrainerRepository trainerRepository, TrainingRepository trainingRepository
+    public TraineeService(TraineeRepository traineeRepository,
+                          UserRepository userRepository,
+                          TrainerRepository trainerRepository,
+                          TrainingRepository trainingRepository,
+                            Auth auth
     ) {
         this.trainingRepository=trainingRepository;
         this.traineeRepository = traineeRepository;
         this.userRepository = userRepository;
         this.trainerRepository = trainerRepository;
+        this.auth = auth;
+
 
     }
 
-    public Trainee getTraineeByUsername(String username) {
-        if (loggedInTrainee == null) {
+    private void isLoggedIn(){
+        if (auth.getLoggedInUser() == null || auth.getLoggedInUser().getTrainee() == null) {
             throw new IllegalStateException("No trainee is logged in.");
         }
+    }
+
+    public Trainee getTraineeByUsername(String username) {
+        isLoggedIn();
 
         Optional<User> optionalUser = userRepository.findByUsername(username);
         if (optionalUser.isPresent()) {
@@ -71,7 +82,7 @@ public class TraineeService {
             User user = optionalUser.get();
             if (user.getPassword().equals(password)) {
                 if (user.getTrainee() != null) {
-                    loggedInTrainee = user.getTrainee();
+                    auth.setLoggedInUser(user);
                     return true;
                 }
             }
@@ -80,30 +91,24 @@ public class TraineeService {
     }
 
     public boolean logOut() {
-        if (loggedInTrainee == null) {
-            throw new IllegalStateException("No trainee is logged in.");
-        }
-        loggedInTrainee = null;
+        isLoggedIn();
+        auth.setLoggedInUser(null);
         return true;
     }
 
     public boolean changePassword(String newPassword) {
-        if (loggedInTrainee == null) {
-            throw new IllegalStateException("No trainee is logged in.");
-        }
-        User user = loggedInTrainee.getUser();
+        isLoggedIn();
+        User user = auth.getLoggedInUser();
         user.setPassword(newPassword);
         userRepository.save(user);
         return true;
     }
 
     public boolean updateTraineeProfile(Trainee updatedTraineeData) {
-        if (loggedInTrainee == null) {
-            throw new IllegalStateException("No trainee is logged in.");
-        }
+        isLoggedIn();
 
 
-        User currentUser = loggedInTrainee.getUser();
+        User currentUser = auth.getLoggedInUser();
         User updatedUser = updatedTraineeData.getUser();
 
 
@@ -131,30 +136,27 @@ public class TraineeService {
             currentUser.setActive(updatedUser.isActive());
         }
 
-        loggedInTrainee.setDateOfBirth(updatedTraineeData.getDateOfBirth());
-        loggedInTrainee.setAddress(updatedTraineeData.getAddress());
+        auth.getLoggedInUser().getTrainee().setDateOfBirth(updatedTraineeData.getDateOfBirth());
+        auth.getLoggedInUser().getTrainee().setAddress(updatedTraineeData.getAddress());
 
 
         userRepository.save(currentUser);
-        traineeRepository.save(loggedInTrainee);
+        traineeRepository.save(auth.getLoggedInUser().getTrainee());
         return true;
     }
 
     public boolean toggleTraineeStatus() {
-        if (loggedInTrainee == null) {
-            throw new IllegalStateException("No trainee is logged in.");
-        }
-        User user = loggedInTrainee.getUser();
+        isLoggedIn();
+
+        User user = auth.getLoggedInUser();
         user.setActive(!user.isActive());
         userRepository.save(user);
-        loggedInTrainee.setUser(user);
+
         return user.isActive();
     }
 
     public boolean deleteByUsername(String username) {
-        if (loggedInTrainee == null) {
-            throw new IllegalStateException("No trainee is logged in.");
-        }
+        isLoggedIn();
 
         Optional<User> optionalUser = userRepository.findByUsername(username);
         if (optionalUser.isPresent()) {
@@ -170,9 +172,7 @@ public class TraineeService {
     }
 
     public boolean updateTraineeTrainers(Integer traineeId, Set<Integer> newTrainerIds) {
-        if (loggedInTrainee == null) {
-            throw new IllegalStateException("No trainee is logged in.");
-        }
+        isLoggedIn();
 
         Trainee trainee = traineeRepository.findById(traineeId)
                 .orElseThrow(() -> new IllegalArgumentException("Trainee not found"));
@@ -189,9 +189,7 @@ public class TraineeService {
     }
 
     public void addTrainerToTrainee(Integer traineeId, Integer trainerId) {
-        if (loggedInTrainee == null) {
-            throw new IllegalStateException("No trainee is logged in.");
-        }
+        isLoggedIn();
 
         Trainee trainee  = traineeRepository.findById(traineeId).orElseThrow();
         Trainer trainer  = trainerRepository.findById(trainerId).orElseThrow();
@@ -200,9 +198,7 @@ public class TraineeService {
     }
 
     public void removeTrainerFromTrainee(Integer traineeId, Integer trainerId) {
-        if (loggedInTrainee == null) {
-            throw new IllegalStateException("No trainee is logged in.");
-        }
+        isLoggedIn();
 
         Trainee trainee = traineeRepository.findById(traineeId).orElseThrow();
         Trainer trainer = trainerRepository.findById(trainerId).orElseThrow();

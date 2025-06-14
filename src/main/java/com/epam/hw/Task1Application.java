@@ -32,7 +32,7 @@ public class Task1Application {
 		Trainee trainee = new Trainee( LocalDate.of(1990, 1, 1), "123 Mech St", user);
 
 		System.out.println(traineeService.logIn("John.Doe","amongusi"));
-		System.out.println(traineeService.deleteByUsername("Giorgi.mech"));
+		System.out.println(traineeService.getTraineeByUsername( "John.Doe"));
 //		System.out.println(traineeService.getTraineeTrainings("John.Doe",
 //				LocalDate.of( 2023, 10, 1),
 //				LocalDate.of( 2023, 10, 31),
