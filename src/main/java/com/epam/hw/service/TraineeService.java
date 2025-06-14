@@ -77,23 +77,11 @@ public class TraineeService {
     }
 
     public boolean logIn(String username, String password) {
-        Optional<User> optionalUser = userRepository.findByUsername(username);
-        if (optionalUser.isPresent()) {
-            User user = optionalUser.get();
-            if (user.getPassword().equals(password)) {
-                if (user.getTrainee() != null) {
-                    auth.setLoggedInUser(user);
-                    return true;
-                }
-            }
-        }
-        return false;
+        return auth.logIn(username, password);
     }
 
     public boolean logOut() {
-        isLoggedIn();
-        auth.setLoggedInUser(null);
-        return true;
+        return auth.logOut();
     }
 
     public boolean changePassword(String newPassword) {
@@ -212,8 +200,9 @@ public class TraineeService {
             LocalDate to,
             String trainerName,
             String trainingTypeName) {
+        isLoggedIn();
 
-        return trainingRepository.findTrainingsByCriteria(
+        return trainingRepository.findTrainingsByTraineeCriteria(
                 username, from, to, trainerName, trainingTypeName);
     }
 

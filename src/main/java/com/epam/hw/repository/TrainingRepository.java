@@ -23,12 +23,29 @@ public interface TrainingRepository extends JpaRepository<Training, Integer> {
         AND tr.date BETWEEN :from AND :to
         AND tr.trainingType.trainingTypeName = :trainingTypeName
         """)
-        List<Training> findTrainingsByCriteria(
+        List<Training> findTrainingsByTraineeCriteria(
                 @Param("traineeUsername") String traineeUsername,
                 @Param("from") LocalDate from,
                 @Param("to") LocalDate to,
                 @Param("trainerUsername") String trainerUsername,
                 @Param("trainingTypeName") String trainingTypeName
+        );
+
+        @Query("""
+        SELECT tr
+        FROM Training tr
+        JOIN tr.trainee t
+        JOIN tr.trainer trn
+        JOIN trn.user u
+        WHERE u.username = :trainerUsername
+        AND t.user.username = :traineeUsername
+        AND tr.date BETWEEN :from AND :to
+        """)
+        List<Training> findTrainingsByTrainerCriteria(
+                @Param("trainerUsername") String trainerUsername,
+                @Param("from") LocalDate from,
+                @Param("to") LocalDate to,
+                @Param("traineeUsername") String traineeUsername
         );
 }
 
