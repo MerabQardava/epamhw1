@@ -1,6 +1,7 @@
 package com.epam.hw.service;
 
 
+import com.epam.hw.entity.Trainee;
 import com.epam.hw.entity.Trainer;
 import com.epam.hw.entity.Training;
 import com.epam.hw.entity.User;
@@ -13,6 +14,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -146,12 +149,25 @@ public class TrainerService {
     }
 
 
+    public List<Trainer> getUnassignedTraineeTrainers(String username) {
+        isLoggedIn();
 
-    // TODO 17. Get trainers list that not assigned on trainee by trainee's username
+        Optional<User> user = userRepository.findByUsername(username);
+        if (user.isPresent()) {
+            Trainee trainee = user.get().getTrainee();
+            if (trainee == null) {
+                return Collections.emptyList();
+            }
 
+            List<Trainer> allTrainers = trainerRepository.findAll();
+            List<Trainer> unassignedTrainers = new ArrayList<>(allTrainers);
+            unassignedTrainers.removeAll(trainee.getTrainers());
 
+            return unassignedTrainers;
+        }
 
-
+        return Collections.emptyList();
+    }
 
 
 }
