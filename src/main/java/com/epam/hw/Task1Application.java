@@ -3,6 +3,7 @@ package com.epam.hw;
 import com.epam.hw.entity.*;
 
 import com.epam.hw.service.TraineeService;
+import com.epam.hw.service.TrainerService;
 import com.epam.hw.service.TrainingService;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
@@ -25,18 +26,14 @@ public class Task1Application {
 
 		TraineeService traineeService = context.getBean(TraineeService.class);
 		TrainingService trainingService = context.getBean(TrainingService.class);
+		TrainerService trainerService = context.getBean(TrainerService.class);
 
 
-		User user = new User("John", "Doe");
+		User user1 = new User("Mecho","Mechitashvili");
+		Trainer trainer1 = new Trainer();
+		traineeService.createTrainee();
 
-		Trainee trainee = new Trainee( LocalDate.of(1990, 1, 1), "123 Mech St", user);
 
-		System.out.println(traineeService.logIn("John.Doe","amongusi"));
-		System.out.println(traineeService.getTraineeByUsername( "John.Doe"));
-//		System.out.println(traineeService.getTraineeTrainings("John.Doe",
-//				LocalDate.of( 2023, 10, 1),
-//				LocalDate.of( 2023, 10, 31),
-//				"Merab.Kardava","Java").size());
 
 
 

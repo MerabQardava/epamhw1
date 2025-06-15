@@ -15,7 +15,7 @@ public class TrainingType {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private String trainingTypeName;
 
     public TrainingType(String trainingTypeName) {
