@@ -191,12 +191,12 @@ public class TraineeService {
         return true;
     }
 
-    public void addTrainerToTrainee(Integer traineeId, Integer trainerId) {
+    public void addTrainerToTrainee(String traineeUsername, String trainerUsername) {
         isLoggedIn();
-        logger.info("Assigning trainer {} to trainee {}", trainerId, traineeId);
+        logger.info("Assigning trainer {} to trainee {}", trainerUsername, traineeUsername);
 
-        Trainee trainee = traineeRepository.findById(traineeId).orElseThrow();
-        Trainer trainer = trainerRepository.findById(trainerId).orElseThrow();
+        Trainee trainee = traineeRepository.findByUser_Username(traineeUsername).orElseThrow();
+        Trainer trainer = trainerRepository.findByUser_Username(trainerUsername).orElseThrow();
 
         trainee.addTrainer(trainer);
     }

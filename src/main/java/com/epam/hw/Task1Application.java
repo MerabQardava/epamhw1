@@ -28,10 +28,14 @@ public class Task1Application {
 		TrainingService trainingService = context.getBean(TrainingService.class);
 		TrainerService trainerService = context.getBean(TrainerService.class);
 
+////		trainerService.createTrainer("Mecho","Mechitashvili","Java");
+		trainerService.LogIn("Mecho.Mechitashvili1","78ce676cba");
+////		System.out.println(trainerService.getTrainerByUsername("Merab.Kardava"));
+//		trainerService.toggleTrainerStatus();
+		System.out.println(trainerService.getUnassignedTraineeTrainers("John.Doe"));
+//		System.out.println(traineeService.logIn("John.Doe","amongusi"));
+//		traineeService.addTrainerToTrainee("John.Doe","Mecho.Mechitashvili1");
 
-		User user1 = new User("Mecho","Mechitashvili");
-		Trainer trainer1 = new Trainer();
-		traineeService.createTrainee();
 
 
 
