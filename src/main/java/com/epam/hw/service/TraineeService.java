@@ -181,10 +181,7 @@ public class TraineeService {
 
         Set<Trainer> newTrainers = new HashSet<>(trainerRepository.findAllById(newTrainerIds));
 
-        trainee.getTrainers().stream()
-                .filter(t -> !newTrainers.contains(t))
-                .forEach(trainee::removeTrainer);
-
+        trainee.getTrainers().removeIf(t -> !newTrainers.contains(t));
         newTrainers.forEach(trainee::addTrainer);
 
         logger.debug("Trainer list updated for traineeId: {}", traineeId);
@@ -201,12 +198,12 @@ public class TraineeService {
         trainee.addTrainer(trainer);
     }
 
-    public void removeTrainerFromTrainee(Integer traineeId, Integer trainerId) {
+    public void removeTrainerFromTrainee(String traineeUsername, String trainerUsername) {
         isLoggedIn();
-        logger.info("Removing trainer {} from trainee {}", trainerId, traineeId);
+        logger.info("Removing trainer {} from trainee {}", traineeUsername, trainerUsername);
 
-        Trainee trainee = traineeRepository.findById(traineeId).orElseThrow();
-        Trainer trainer = trainerRepository.findById(trainerId).orElseThrow();
+        Trainee trainee = traineeRepository.findByUser_Username(traineeUsername).orElseThrow();
+        Trainer trainer = trainerRepository.findByUser_Username(trainerUsername).orElseThrow();
 
         trainee.removeTrainer(trainer);
     }
@@ -225,4 +222,9 @@ public class TraineeService {
         return trainingRepository.findTrainingsByTraineeCriteria(
                 username, from, to, trainerName, trainingTypeName);
     }
+
+
+
+
+
 }

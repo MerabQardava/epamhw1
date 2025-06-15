@@ -182,4 +182,6 @@ public class TrainerService {
         logger.warn("No user found with username: {}", username);
         return Collections.emptyList();
     }
+
+
 }
