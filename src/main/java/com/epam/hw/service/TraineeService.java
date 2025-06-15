@@ -63,16 +63,20 @@ public class TraineeService {
         return null;
     }
 
-    public void createTrainee(Trainee trainee) {
-        String baseUsername = trainee.getUser().getUsername();
+    public void createTrainee(String firstName,String lastName,LocalDate dateOfBirth,String address) {
+        User user = new User(firstName,lastName);
+
+        String baseUsername = user.getUsername();
         int num = 1;
 
         logger.debug("Creating new trainee with base username: {}", baseUsername);
 
-        while (userRepository.findByUsername(trainee.getUser().getUsername()).isPresent()) {
-            trainee.getUser().setUsername(baseUsername + num);
+        while (userRepository.findByUsername(user.getUsername()).isPresent()) {
+            user.setUsername(baseUsername + num);
             num++;
         }
+
+        Trainee trainee = new Trainee(dateOfBirth,address,user);
 
         traineeRepository.save(trainee);
         logger.info("Trainee created with username: {}", trainee.getUser().getUsername());

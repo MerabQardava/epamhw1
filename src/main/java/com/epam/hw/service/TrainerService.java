@@ -1,11 +1,9 @@
 package com.epam.hw.service;
 
-import com.epam.hw.entity.Trainee;
-import com.epam.hw.entity.Trainer;
-import com.epam.hw.entity.Training;
-import com.epam.hw.entity.User;
+import com.epam.hw.entity.*;
 import com.epam.hw.repository.TrainerRepository;
 import com.epam.hw.repository.TrainingRepository;
+import com.epam.hw.repository.TrainingTypeRepository;
 import com.epam.hw.repository.UserRepository;
 import com.epam.hw.storage.Auth;
 import jakarta.transaction.Transactional;
@@ -27,16 +25,18 @@ public class TrainerService {
     private final UserRepository userRepository;
     private final TrainingRepository trainingRepository;
     private final Auth auth;
+    private final TrainingTypeRepository trainingTypeRepository;
 
     @Autowired
     public TrainerService(TrainerRepository trainerRepository,
                           UserRepository userRepository,
                           Auth auth,
-                          TrainingRepository trainingRepository) {
+                          TrainingRepository trainingRepository, TrainingTypeRepository trainingTypeRepository) {
         this.trainerRepository = trainerRepository;
         this.userRepository = userRepository;
         this.auth = auth;
         this.trainingRepository = trainingRepository;
+        this.trainingTypeRepository = trainingTypeRepository;
     }
 
     private void isLoggedIn() {
@@ -46,14 +46,24 @@ public class TrainerService {
         }
     }
 
-    public Trainer createTrainer(Trainer trainer) {
-        String baseUsername = trainer.getUser().getUsername();
+    public Trainer createTrainer(String firstName,String lastName,String trainingTypeName) {
+
+        Optional<TrainingType> trainingTypeOptional = trainingTypeRepository.findByTrainingTypeName(trainingTypeName);
+        if (trainingTypeOptional.isEmpty()) {
+            throw new IllegalStateException("Training type " + trainingTypeName + " does not exist.");
+        }
+
+        User user = new User(firstName,lastName);
+
+        String baseUsername = user.getUsername();
         int num = 1;
 
-        while (userRepository.findByUsername(trainer.getUser().getUsername()).isPresent()) {
-            trainer.getUser().setUsername(baseUsername + num);
+        while (userRepository.findByUsername(user.getUsername()).isPresent()) {
+            user.setUsername(baseUsername + num);
             num++;
         }
+
+        Trainer trainer = new Trainer(trainingTypeOptional.get(), user);
 
         trainerRepository.save(trainer);
         logger.info("Trainer created with username: {}", trainer.getUser().getUsername());
