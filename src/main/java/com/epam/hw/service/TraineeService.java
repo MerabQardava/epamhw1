@@ -5,62 +5,61 @@ import com.epam.hw.entity.Trainer;
 import com.epam.hw.entity.Training;
 import com.epam.hw.entity.User;
 import com.epam.hw.repository.TraineeRepository;
-
 import com.epam.hw.repository.TrainerRepository;
 import com.epam.hw.repository.TrainingRepository;
 import com.epam.hw.repository.UserRepository;
 import com.epam.hw.storage.Auth;
 import jakarta.transaction.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-
+import java.util.*;
 
 @Service
 @Transactional
 public class TraineeService {
+
+    private static final Logger logger = LoggerFactory.getLogger(TraineeService.class);
+
     private final TraineeRepository traineeRepository;
     private final UserRepository userRepository;
     private final TrainerRepository trainerRepository;
     private final TrainingRepository trainingRepository;
-
-    private Auth auth;
+    private final Auth auth;
 
     @Autowired
     public TraineeService(TraineeRepository traineeRepository,
                           UserRepository userRepository,
                           TrainerRepository trainerRepository,
                           TrainingRepository trainingRepository,
-                            Auth auth
-    ) {
-        this.trainingRepository=trainingRepository;
+                          Auth auth) {
         this.traineeRepository = traineeRepository;
         this.userRepository = userRepository;
         this.trainerRepository = trainerRepository;
+        this.trainingRepository = trainingRepository;
         this.auth = auth;
-
-
     }
 
-    private void isLoggedIn(){
+    private void isLoggedIn() {
         if (auth.getLoggedInUser() == null || auth.getLoggedInUser().getTrainee() == null) {
+            logger.warn("Unauthorized access attempt – no trainee is logged in.");
             throw new IllegalStateException("No trainee is logged in.");
         }
     }
 
     public Trainee getTraineeByUsername(String username) {
         isLoggedIn();
+        logger.debug("Fetching trainee by username: {}", username);
 
         Optional<User> optionalUser = userRepository.findByUsername(username);
         if (optionalUser.isPresent()) {
-            User user = optionalUser.get();
-            return user.getTrainee();
+            logger.info("Trainee found for username: {}", username);
+            return optionalUser.get().getTrainee();
         }
+        logger.warn("No user found with username: {}", username);
         return null;
     }
 
@@ -68,24 +67,30 @@ public class TraineeService {
         String baseUsername = trainee.getUser().getUsername();
         int num = 1;
 
+        logger.debug("Creating new trainee with base username: {}", baseUsername);
+
         while (userRepository.findByUsername(trainee.getUser().getUsername()).isPresent()) {
             trainee.getUser().setUsername(baseUsername + num);
             num++;
         }
 
         traineeRepository.save(trainee);
+        logger.info("Trainee created with username: {}", trainee.getUser().getUsername());
     }
 
     public boolean logIn(String username, String password) {
+        logger.info("Attempting login for username: {}", username);
         return auth.logIn(username, password);
     }
 
     public boolean logOut() {
+        logger.info("Logging out current user.");
         return auth.logOut();
     }
 
     public boolean changePassword(String newPassword) {
         isLoggedIn();
+        logger.info("Changing password for logged-in trainee.");
         User user = auth.getLoggedInUser();
         user.setPassword(newPassword);
         userRepository.save(user);
@@ -95,10 +100,9 @@ public class TraineeService {
     public boolean updateTraineeProfile(Trainee updatedTraineeData) {
         isLoggedIn();
 
-
+        logger.info("Updating profile for logged-in trainee.");
         User currentUser = auth.getLoggedInUser();
         User updatedUser = updatedTraineeData.getUser();
-
 
         if (updatedUser != null && updatedUser.getUsername() != null &&
                 !updatedUser.getUsername().equals(currentUser.getUsername())) {
@@ -107,15 +111,14 @@ public class TraineeService {
             String newUsername = baseUsername;
             int num = 1;
 
-
             while (userRepository.findByUsername(newUsername).isPresent()) {
                 newUsername = baseUsername + num;
                 num++;
             }
 
             currentUser.setUsername(newUsername);
+            logger.debug("Username updated to: {}", newUsername);
         }
-
 
         if (updatedUser != null) {
             currentUser.setFirstName(updatedUser.getFirstName());
@@ -127,24 +130,26 @@ public class TraineeService {
         auth.getLoggedInUser().getTrainee().setDateOfBirth(updatedTraineeData.getDateOfBirth());
         auth.getLoggedInUser().getTrainee().setAddress(updatedTraineeData.getAddress());
 
-
         userRepository.save(currentUser);
         traineeRepository.save(auth.getLoggedInUser().getTrainee());
+
+        logger.info("Trainee profile updated.");
         return true;
     }
 
     public boolean toggleTraineeStatus() {
         isLoggedIn();
-
         User user = auth.getLoggedInUser();
-        user.setActive(!user.isActive());
+        boolean newStatus = !user.isActive();
+        user.setActive(newStatus);
         userRepository.save(user);
-
-        return user.isActive();
+        logger.info("Trainee status toggled to: {}", newStatus ? "ACTIVE" : "INACTIVE");
+        return newStatus;
     }
 
     public boolean deleteByUsername(String username) {
         isLoggedIn();
+        logger.warn("Deleting user with username: {}", username);
 
         Optional<User> optionalUser = userRepository.findByUsername(username);
         if (optionalUser.isPresent()) {
@@ -152,15 +157,20 @@ public class TraineeService {
             Trainee trainee = user.getTrainee();
             if (trainee != null) {
                 traineeRepository.delete(trainee);
+                logger.debug("Deleted trainee entity for user: {}", username);
             }
             userRepository.delete(user);
+            logger.info("User deleted: {}", username);
             return true;
         }
+
+        logger.warn("Delete failed – no user found with username: {}", username);
         return false;
     }
 
     public boolean updateTraineeTrainers(Integer traineeId, Set<Integer> newTrainerIds) {
         isLoggedIn();
+        logger.info("Updating trainers for traineeId: {}", traineeId);
 
         Trainee trainee = traineeRepository.findById(traineeId)
                 .orElseThrow(() -> new IllegalArgumentException("Trainee not found"));
@@ -173,20 +183,23 @@ public class TraineeService {
 
         newTrainers.forEach(trainee::addTrainer);
 
+        logger.debug("Trainer list updated for traineeId: {}", traineeId);
         return true;
     }
 
     public void addTrainerToTrainee(Integer traineeId, Integer trainerId) {
         isLoggedIn();
+        logger.info("Assigning trainer {} to trainee {}", trainerId, traineeId);
 
-        Trainee trainee  = traineeRepository.findById(traineeId).orElseThrow();
-        Trainer trainer  = trainerRepository.findById(trainerId).orElseThrow();
+        Trainee trainee = traineeRepository.findById(traineeId).orElseThrow();
+        Trainer trainer = trainerRepository.findById(trainerId).orElseThrow();
 
         trainee.addTrainer(trainer);
     }
 
     public void removeTrainerFromTrainee(Integer traineeId, Integer trainerId) {
         isLoggedIn();
+        logger.info("Removing trainer {} from trainee {}", trainerId, traineeId);
 
         Trainee trainee = traineeRepository.findById(traineeId).orElseThrow();
         Trainer trainer = trainerRepository.findById(trainerId).orElseThrow();
@@ -202,11 +215,10 @@ public class TraineeService {
             String trainingTypeName) {
         isLoggedIn();
 
+        logger.debug("Fetching trainings for trainee: {} from {} to {}, trainerName={}, trainingType={}",
+                username, from, to, trainerName, trainingTypeName);
+
         return trainingRepository.findTrainingsByTraineeCriteria(
                 username, from, to, trainerName, trainingTypeName);
     }
-
-
-
-
 }
