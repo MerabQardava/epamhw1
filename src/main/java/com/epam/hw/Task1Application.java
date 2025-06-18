@@ -5,7 +5,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.context.annotation.PropertySource;
 
-import java.time.LocalDate;
 
 @SpringBootApplication
 @PropertySource("classpath:application.properties")
