@@ -10,6 +10,7 @@ import com.epam.hw.repository.TrainingRepository;
 import com.epam.hw.repository.UserRepository;
 import com.epam.hw.storage.Auth;
 import com.epam.hw.storage.LoginResults;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,7 +58,7 @@ public class TraineeService {
 
         Optional<User> optionalUser = userRepository.findByUsername(username);
         if (optionalUser.isPresent()) {
-            logger.info("Trainee found for username: {}", username);
+            logger.info("User found for username: {}", username);
             return optionalUser.get().getTrainee();
         }
         logger.warn("No user found with username: {}", username);
@@ -102,10 +103,17 @@ public class TraineeService {
         return auth.logOut();
     }
 
-    public boolean changePassword(String newPassword) {
+    public boolean changePassword(String username,String newPassword) {
         isLoggedIn();
         logger.info("Changing password for logged-in trainee.");
-        User user = auth.getLoggedInUser();
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new EntityNotFoundException("User not found: " + username));
+
+        if(user.getTrainee()==null) {
+            logger.warn("User {} is not a trainee, cannot change password.", username);
+            throw new EntityNotFoundException("User is not a trainee: " + username);
+        }
+
         user.setPassword(newPassword);
         userRepository.save(user);
         return true;

@@ -1,9 +1,12 @@
 package com.epam.hw.controller;
 
 import com.epam.hw.dto.TraineeRegistrationDTO;
+import com.epam.hw.dto.UserPasswordChangeDTO;
 import com.epam.hw.entity.Trainee;
+import com.epam.hw.entity.User;
 import com.epam.hw.service.TraineeService;
 import com.epam.hw.storage.LoginResults;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -45,6 +48,24 @@ public class TraineeController {
         }
 
         return ResponseEntity.ok("Login successful");
+    }
+
+    @PutMapping("/login/{username}")
+    public ResponseEntity<String> changeLogin(@PathVariable String username,
+                                              @RequestBody @Valid UserPasswordChangeDTO dto){
+        try {
+            Trainee trainee = traineeService.getTraineeByUsername(username);
+            if(trainee == null){
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Trainee with username of "+username+" not found");
+            }else if(!trainee.getUser().getPassword().equals(dto.oldPassword())){
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid Credentials");
+            }else{
+                traineeService.changePassword(username, dto.newPassword());
+                return ResponseEntity.ok("Password changed successfully");
+            }
+        }catch (EntityNotFoundException e){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Trainee with username of "+username+" not found");
+        }
 
     }
 

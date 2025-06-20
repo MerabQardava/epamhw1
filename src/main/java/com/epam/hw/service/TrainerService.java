@@ -7,6 +7,7 @@ import com.epam.hw.repository.TrainingTypeRepository;
 import com.epam.hw.repository.UserRepository;
 import com.epam.hw.storage.Auth;
 import com.epam.hw.storage.LoginResults;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -103,12 +104,19 @@ public class TrainerService {
         return null;
     }
 
-    public boolean changePassword(String newPassword) {
+    public boolean changePassword(String username, String newPassword) {
         isLoggedIn();
-        User user = auth.getLoggedInUser();
+        logger.info("Changing password for logged-in trainer.");
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new EntityNotFoundException("User not found: " + username));
+
+        if(user.getTrainer()==null) {
+            logger.warn("User {} is not a trainer, cannot change password.", username);
+            throw new EntityNotFoundException("User is not a trainer: " + username);
+        }
+
         user.setPassword(newPassword);
         userRepository.save(user);
-        logger.info("Password changed for trainer: {}", user.getUsername());
         return true;
     }
 
