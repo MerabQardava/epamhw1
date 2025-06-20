@@ -1,5 +1,6 @@
 package com.epam.hw.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 
 import lombok.Getter;
@@ -31,9 +32,12 @@ public class User {
     @Column(nullable = false)
     private boolean isActive = true;
 
+
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonBackReference
     private Trainee trainee;
 
+    @JsonBackReference
     @OneToOne(mappedBy = "user",cascade = CascadeType.ALL, orphanRemoval = true)
     private Trainer trainer;
 

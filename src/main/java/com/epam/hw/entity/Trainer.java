@@ -1,6 +1,7 @@
 package com.epam.hw.entity;
 
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -33,6 +34,7 @@ public class Trainer{
     private Set<Trainee> trainees = new HashSet<>();
 
     @OneToMany(mappedBy = "trainer", cascade = CascadeType.ALL)
+    @JsonManagedReference
     private List<Training> trainings = new ArrayList<>();
 
 

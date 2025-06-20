@@ -1,5 +1,6 @@
 package com.epam.hw.entity;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -27,6 +28,7 @@ public class Trainee{
 
     @OneToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "user_id", nullable = false,unique = true)
+    @JsonManagedReference
     private User user;
 
     @ManyToMany

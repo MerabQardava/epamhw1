@@ -6,6 +6,7 @@ import com.epam.hw.repository.TrainingRepository;
 import com.epam.hw.repository.TrainingTypeRepository;
 import com.epam.hw.repository.UserRepository;
 import com.epam.hw.storage.Auth;
+import com.epam.hw.storage.LoginResults;
 import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -70,9 +71,17 @@ public class TrainerService {
         return trainer;
     }
 
-    public boolean LogIn(String username, String password) {
-        logger.info("Trainer login attempt: {}", username);
-        return auth.logIn(username, password);
+    public LoginResults logIn(String username, String password) {
+        logger.info("Attempting login for username: {}", username);
+
+        Optional<Trainer> trainerOpt = trainerRepository.findByUser_Username(username);
+        if (trainerOpt.isEmpty()) {
+            logger.info("Trainer not found: {}", username);
+            return LoginResults.USER_NOT_FOUND;
+        }
+
+        boolean ok = auth.logIn(username, password);
+        return ok ? LoginResults.SUCCESS : LoginResults.BAD_PASSWORD;
     }
 
     public boolean LogOut() {

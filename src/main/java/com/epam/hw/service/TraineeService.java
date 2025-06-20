@@ -9,6 +9,7 @@ import com.epam.hw.repository.TrainerRepository;
 import com.epam.hw.repository.TrainingRepository;
 import com.epam.hw.repository.UserRepository;
 import com.epam.hw.storage.Auth;
+import com.epam.hw.storage.LoginResults;
 import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,7 +64,7 @@ public class TraineeService {
         return null;
     }
 
-    public void createTrainee(String firstName,String lastName,LocalDate dateOfBirth,String address) {
+    public Trainee createTrainee(String firstName,String lastName,LocalDate dateOfBirth,String address) {
         User user = new User(firstName,lastName);
 
         String baseUsername = user.getUsername();
@@ -80,11 +81,20 @@ public class TraineeService {
 
         traineeRepository.save(trainee);
         logger.info("Trainee created with username: {}", trainee.getUser().getUsername());
+        return trainee;
     }
 
-    public boolean logIn(String username, String password) {
+    public LoginResults logIn(String username, String password) {
         logger.info("Attempting login for username: {}", username);
-        return auth.logIn(username, password);
+
+        Optional<Trainee> traineeOpt = traineeRepository.findByUser_Username(username);
+        if (traineeOpt.isEmpty()) {
+            logger.info("Trainee not found: {}", username);
+            return LoginResults.USER_NOT_FOUND;
+        }
+
+        boolean ok = auth.logIn(username, password);
+        return ok ? LoginResults.SUCCESS : LoginResults.BAD_PASSWORD;
     }
 
     public boolean logOut() {
