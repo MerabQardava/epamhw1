@@ -98,6 +98,17 @@ public class TraineeController {
         return ResponseEntity.ok(profileDTO);
     }
 
+    @DeleteMapping("/{username}")
+    public ResponseEntity<String> deleteTrainee(@PathVariable String username) {
+        Trainee trainee = traineeService.getTraineeByUsername(username);
+        if (trainee == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Trainee with username of " + username + " not found");
+        }
+
+        traineeService.deleteByUsername(username);
+        return ResponseEntity.ok("Trainee with username of " + username + " deleted successfully");
+    }
+
 
 
 }
