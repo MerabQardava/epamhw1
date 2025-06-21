@@ -1,9 +1,6 @@
 package com.epam.hw.controller;
 
-import com.epam.hw.dto.TraineeProfileDTO;
-import com.epam.hw.dto.TraineeRegistrationDTO;
-import com.epam.hw.dto.TrainersListDTO;
-import com.epam.hw.dto.UserPasswordChangeDTO;
+import com.epam.hw.dto.*;
 import com.epam.hw.entity.Trainee;
 import com.epam.hw.entity.User;
 import com.epam.hw.service.TraineeService;
@@ -31,11 +28,12 @@ public class TraineeController {
     }
 
     @PostMapping()
-    public ResponseEntity<Map<String, String>> registerTrainee(@RequestBody @Valid TraineeRegistrationDTO dto){
+    public ResponseEntity<CreateUserReturnDTO> registerTrainee(@RequestBody @Valid TraineeRegistrationDTO dto){
         Trainee saved = traineeService.createTrainee(dto.firstName(), dto.lastName(),LocalDate.parse(dto.dob()),dto.address());
-        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
-                "Username",saved.getUser().getUsername(),
-                "Password",saved.getUser().getPassword()));
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(new CreateUserReturnDTO(
+                saved.getUser().getUsername(),
+                saved.getUser().getPassword()));
     }
 
     @GetMapping("/login")
@@ -108,6 +106,42 @@ public class TraineeController {
         traineeService.deleteByUsername(username);
         return ResponseEntity.ok("Trainee with username of " + username + " deleted successfully");
     }
+
+    @PutMapping("/{username}")
+    public ResponseEntity<UpdateTraineeReturnDTO> updateTraineeProfile(@PathVariable String username,
+                                                                 @RequestBody @Valid UpdateTraineeDTO dto){
+        try{
+            Trainee updatedTrainee = traineeService.updateTraineeProfile(username,new UpdateTraineeDTO(
+                    dto.firstName(),
+                    dto.lastName(),
+                    dto.dob(),
+                    dto.address(),
+                    dto.isActive()
+            ));
+
+            Set<TrainersListDTO> trainersSet = updatedTrainee.getTrainers().stream()
+                    .map(trainer -> new TrainersListDTO(
+                            trainer.getUser().getUsername(),
+                            trainer.getUser().getFirstName(),
+                            trainer.getUser().getLastName(),
+                            trainer.getSpecializationId()
+                    )).collect(Collectors.toSet());
+
+            return ResponseEntity.ok(new UpdateTraineeReturnDTO(
+                    updatedTrainee.getUser().getUsername(),
+                    updatedTrainee.getUser().getFirstName(),
+                    updatedTrainee.getUser().getLastName(),
+                    updatedTrainee.getDateOfBirth().toString(),
+                    updatedTrainee.getAddress(),
+                    updatedTrainee.getUser().isActive(),
+                    trainersSet
+            ));
+        }catch (EntityNotFoundException e){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
+
+    }
+
 
 
 

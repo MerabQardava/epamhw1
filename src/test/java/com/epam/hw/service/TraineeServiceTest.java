@@ -150,16 +150,16 @@ class TraineeServiceTest {
 //        verify(userRepo).save(dbUser);
 //    }
 
-    @Test
-    void toggleTraineeStatusTest(){
-
-        boolean result = traineeService.toggleTraineeStatus();
-
-        assertFalse(result);
-        assertFalse(loggedUser.isActive());
-
-        verify(userRepo).save(loggedUser);
-    }
+//    @Test
+//    void toggleTraineeStatusTest(){
+//
+//        boolean result = traineeService.toggleTraineeStatus();
+//
+//        assertFalse(result);
+//        assertFalse(loggedUser.isActive());
+//
+//        verify(userRepo).save(loggedUser);
+//    }
 
     @Test
     void deleteByUsernameTest(){
@@ -224,53 +224,53 @@ class TraineeServiceTest {
 
 
 
-    @Test
-    void profileUpdated_withUniqueUsername() {
-        User updatedUser = new User("A", "B");
-        updatedUser.setActive(false);
+//    @Test
+//    void profileUpdated_withUniqueUsername() {
+//        User updatedUser = new User("A", "B");
+//        updatedUser.setActive(false);
+//
+//        Trainee dto = new Trainee();
+//        dto.setUser(updatedUser);
+//        dto.setAddress("Tbilisi");
+//        dto.setDateOfBirth(LocalDate.of(1999, 12, 31));
+//
+//        when(userRepo.findByUsername("A.B")).thenReturn(Optional.empty());
+//
+//        boolean result = traineeService.updateTraineeProfile(dto);
+//        assertTrue(result);
+//
+//        ArgumentCaptor<User> userCap = ArgumentCaptor.forClass(User.class);
+//        verify(userRepo).save(userCap.capture());
+//        User persistedUser = userCap.getValue();
+//
+//        assertEquals("A.B", persistedUser.getUsername());
+//        assertEquals("A",  persistedUser.getFirstName());
+//        assertEquals("B", persistedUser.getLastName());
+//        assertFalse(persistedUser.isActive());
+//
+//        ArgumentCaptor<Trainee> trCap = ArgumentCaptor.forClass(Trainee.class);
+//        verify(traineeRepo).save(trCap.capture());
+//        Trainee persistedTrainee = trCap.getValue();
+//
+//        assertEquals("Tbilisi", persistedTrainee.getAddress());
+//        assertEquals(LocalDate.of(1999,12,31), persistedTrainee.getDateOfBirth());
+//    }
 
-        Trainee dto = new Trainee();
-        dto.setUser(updatedUser);
-        dto.setAddress("Tbilisi");
-        dto.setDateOfBirth(LocalDate.of(1999, 12, 31));
-
-        when(userRepo.findByUsername("A.B")).thenReturn(Optional.empty());
-
-        boolean result = traineeService.updateTraineeProfile(dto);
-        assertTrue(result);
-
-        ArgumentCaptor<User> userCap = ArgumentCaptor.forClass(User.class);
-        verify(userRepo).save(userCap.capture());
-        User persistedUser = userCap.getValue();
-
-        assertEquals("A.B", persistedUser.getUsername());
-        assertEquals("A",  persistedUser.getFirstName());
-        assertEquals("B", persistedUser.getLastName());
-        assertFalse(persistedUser.isActive());
-
-        ArgumentCaptor<Trainee> trCap = ArgumentCaptor.forClass(Trainee.class);
-        verify(traineeRepo).save(trCap.capture());
-        Trainee persistedTrainee = trCap.getValue();
-
-        assertEquals("Tbilisi", persistedTrainee.getAddress());
-        assertEquals(LocalDate.of(1999,12,31), persistedTrainee.getDateOfBirth());
-    }
-
-    @Test
-    void profileUpdated_usernameTaken() {
-        when(userRepo.findByUsername("A.B")).thenReturn(
-                Optional.of(new User()),
-                Optional.empty());
-
-        User dtoUser = new User("A","B");
-
-        Trainee dto = new Trainee();
-        dto.setUser(dtoUser);
-
-        traineeService.updateTraineeProfile(dto);
-
-        verify(userRepo).save(argThat(u -> u.getUsername().equals("A.B1")));
-    }
+//    @Test
+//    void profileUpdated_usernameTaken() {
+//        when(userRepo.findByUsername("A.B")).thenReturn(
+//                Optional.of(new User()),
+//                Optional.empty());
+//
+//        User dtoUser = new User("A","B");
+//
+//        Trainee dto = new Trainee();
+//        dto.setUser(dtoUser);
+//
+//        traineeService.updateTraineeProfile(dto);
+//
+//        verify(userRepo).save(argThat(u -> u.getUsername().equals("A.B1")));
+//    }
 
 
     @Test

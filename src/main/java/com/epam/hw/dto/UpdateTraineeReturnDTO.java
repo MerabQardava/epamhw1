@@ -1,11 +1,9 @@
 package com.epam.hw.dto;
 
-import com.epam.hw.entity.Trainer;
-
-import java.util.List;
 import java.util.Set;
 
-public record TraineeProfileDTO(
+public record UpdateTraineeReturnDTO(
+        String username,
         String firstName,
         String lastName,
         String dob,
@@ -14,4 +12,3 @@ public record TraineeProfileDTO(
         Set<TrainersListDTO> trainers
 ) {
 }
-

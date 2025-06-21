@@ -27,13 +27,12 @@ public class TrainerController {
     }
 
     @PostMapping()
-    public ResponseEntity<Map<String,String>> registerTrainer(@RequestBody @Valid TrainerRegistrationDTO dto){
+    public ResponseEntity<CreateUserReturnDTO> registerTrainer(@RequestBody @Valid TrainerRegistrationDTO dto){
         Trainer saved = trainerService.createTrainer(dto.firstName(),dto.lastName(),dto.specialization());
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
-                "Username",saved.getUser().getUsername(),
-                "Password",saved.getUser().getPassword()
-        ));
+        return ResponseEntity.status(HttpStatus.CREATED).body(new CreateUserReturnDTO(
+                saved.getUser().getUsername(),
+                saved.getUser().getPassword()));
     }
 
 

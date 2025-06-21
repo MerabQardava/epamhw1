@@ -1,5 +1,6 @@
 package com.epam.hw.service;
 
+import com.epam.hw.dto.UpdateTraineeDTO;
 import com.epam.hw.entity.Trainee;
 import com.epam.hw.entity.Trainer;
 import com.epam.hw.entity.Training;
@@ -15,6 +16,7 @@ import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.util.TypeCollector;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -119,51 +121,51 @@ public class TraineeService {
         return true;
     }
 
-    public boolean updateTraineeProfile(Trainee updatedTraineeData) {
+    public Trainee updateTraineeProfile(String username,UpdateTraineeDTO updatedTraineeData) {
         isLoggedIn();
 
         logger.info("Updating profile for logged-in trainee.");
-        User currentUser = auth.getLoggedInUser();
-        User updatedUser = updatedTraineeData.getUser();
 
-        if (updatedUser != null && updatedUser.getUsername() != null &&
-                !updatedUser.getUsername().equals(currentUser.getUsername())) {
-
-            String baseUsername = updatedUser.getUsername();
-            String newUsername = baseUsername;
-            int num = 1;
-
-            while (userRepository.findByUsername(newUsername).isPresent()) {
-                newUsername = baseUsername + num;
-                num++;
-            }
-
-            currentUser.setUsername(newUsername);
-            logger.debug("Username updated to: {}", newUsername);
+        Trainee trainee = getTraineeByUsername(username);
+        if (trainee == null) {
+            logger.warn("Trainee not found for username: {}",username);
+            throw new EntityNotFoundException("Trainee not found: " + username);
         }
 
-        if (updatedUser != null) {
-            currentUser.setFirstName(updatedUser.getFirstName());
-            currentUser.setLastName(updatedUser.getLastName());
-            currentUser.setPassword(updatedUser.getPassword());
-            currentUser.setActive(updatedUser.isActive());
+        User currentUser = trainee.getUser();
+
+        currentUser.setFirstName(updatedTraineeData.firstName());
+        currentUser.setLastName(updatedTraineeData.lastName());
+
+        if(updatedTraineeData.isActive()){
+            toggleTraineeStatus(username);
         }
 
-        auth.getLoggedInUser().getTrainee().setDateOfBirth(updatedTraineeData.getDateOfBirth());
-        auth.getLoggedInUser().getTrainee().setAddress(updatedTraineeData.getAddress());
+        if (updatedTraineeData.dob() != null) {
+            trainee.setDateOfBirth(LocalDate.parse(updatedTraineeData.dob()));
+        }
 
-        userRepository.save(currentUser);
-        traineeRepository.save(auth.getLoggedInUser().getTrainee());
+        if (updatedTraineeData.address() != null) {
+            trainee.setAddress(updatedTraineeData.address());
+        }
 
-        logger.info("Trainee profile updated.");
-        return true;
+
+        traineeRepository.save(trainee);
+
+        return trainee;
+
+
     }
 
-    public boolean toggleTraineeStatus() {
+    public boolean toggleTraineeStatus(String username) {
         isLoggedIn();
-        User user = auth.getLoggedInUser();
+        Trainee trainee = traineeRepository.findByUser_Username(username).orElseThrow(
+                () -> new EntityNotFoundException("Trainee not found: " + username));
+
+        User user = trainee.getUser();
         boolean newStatus = !user.isActive();
         user.setActive(newStatus);
+
         userRepository.save(user);
         logger.info("Trainee status toggled to: {}", newStatus ? "ACTIVE" : "INACTIVE");
         return newStatus;
