@@ -1,7 +1,7 @@
 package com.epam.hw.controller;
 
-import com.epam.hw.dto.TrainerRegistrationDTO;
-import com.epam.hw.dto.UserPasswordChangeDTO;
+import com.epam.hw.dto.*;
+import com.epam.hw.entity.Trainee;
 import com.epam.hw.entity.Trainer;
 import com.epam.hw.service.TrainerService;
 import com.epam.hw.storage.LoginResults;
@@ -13,6 +13,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/trainer")
@@ -69,6 +71,30 @@ public class TrainerController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Trainer with username of "+username+" not found");
         }
 
+    }
+
+    @GetMapping("/{username}")
+    public ResponseEntity<TrainerProfileDTO> getTrainerProfile(@PathVariable String username) {
+        Trainer trainer = trainerService.getTrainerByUsername(username);
+        if (trainer == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
+
+        Set<TraineesListDTO> traineesSet = trainer.getTrainees().stream()
+                .map(trainee -> new TraineesListDTO(
+                        trainee.getUser().getUsername(),
+                        trainee.getUser().getFirstName(),
+                        trainee.getUser().getLastName()
+                )).collect(Collectors.toSet());
+
+        TrainerProfileDTO profileDTO = new TrainerProfileDTO(
+                trainer.getUser().getFirstName(),
+                trainer.getUser().getLastName(),
+                trainer.getSpecializationId(),
+                trainer.getUser().isActive(),
+                traineesSet
+        );
+        return ResponseEntity.ok(profileDTO);
     }
 
 }
