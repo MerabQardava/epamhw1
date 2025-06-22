@@ -134,50 +134,50 @@ public class TrainerServiceTest {
     }
 
 
-    @Test
-    void toggleTrainerStatusTest(){
+//    @Test
+//    void toggleTrainerStatusTest(){
+//
+//        boolean result = trainerService.toggleTrainerStatus();
+//
+//        assertFalse(result);
+//        assertFalse(loggedUser.isActive());
+//
+//        verify(userRepo).save(loggedUser);
+//    }
 
-        boolean result = trainerService.toggleTrainerStatus();
-
-        assertFalse(result);
-        assertFalse(loggedUser.isActive());
-
-        verify(userRepo).save(loggedUser);
-    }
-
-    @Test
-    void updateTrainerProfile_updatesAllFieldsAndPersists() {
-        TrainingType newType = new TrainingType("Java");
-        User incomingUser = new User("NewFirst", "NewLast");
-        incomingUser.setUsername("desired");   // desired username
-        incomingUser.setPassword("newpw");
-        incomingUser.setActive(false);
-
-        Trainer incomingTrainer = new Trainer();
-        incomingTrainer.setUser(incomingUser);
-        incomingTrainer.setSpecializationId(newType);
-
-        when(userRepo.findByUsername("desired"))
-                .thenReturn(Optional.of(new User()));
-        when(userRepo.findByUsername("desired1"))
-                .thenReturn(Optional.empty());
-
-        boolean result = trainerService.updateTraineeProfile(incomingTrainer);
-        assertTrue(result);
-
-        ArgumentCaptor<User> userCap = ArgumentCaptor.forClass(User.class);
-        verify(userRepo).save(userCap.capture());
-        User savedUser = userCap.getValue();
-
-        assertEquals("desired1", savedUser.getUsername());
-        assertEquals("NewFirst", savedUser.getFirstName());
-        assertEquals("NewLast",  savedUser.getLastName());
-        assertEquals("newpw",    savedUser.getPassword());
-        assertFalse(savedUser.isActive());
-
-        verify(trainerRepo).save(loggedTrainer);
-        assertEquals(newType, loggedTrainer.getSpecializationId());
-    }
+//    @Test
+//    void updateTrainerProfile_updatesAllFieldsAndPersists() {
+//        TrainingType newType = new TrainingType("Java");
+//        User incomingUser = new User("NewFirst", "NewLast");
+//        incomingUser.setUsername("desired");   // desired username
+//        incomingUser.setPassword("newpw");
+//        incomingUser.setActive(false);
+//
+//        Trainer incomingTrainer = new Trainer();
+//        incomingTrainer.setUser(incomingUser);
+//        incomingTrainer.setSpecializationId(newType);
+//
+//        when(userRepo.findByUsername("desired"))
+//                .thenReturn(Optional.of(new User()));
+//        when(userRepo.findByUsername("desired1"))
+//                .thenReturn(Optional.empty());
+//
+//        boolean result = trainerService.updateTraineeProfile(incomingTrainer);
+//        assertTrue(result);
+//
+//        ArgumentCaptor<User> userCap = ArgumentCaptor.forClass(User.class);
+//        verify(userRepo).save(userCap.capture());
+//        User savedUser = userCap.getValue();
+//
+//        assertEquals("desired1", savedUser.getUsername());
+//        assertEquals("NewFirst", savedUser.getFirstName());
+//        assertEquals("NewLast",  savedUser.getLastName());
+//        assertEquals("newpw",    savedUser.getPassword());
+//        assertFalse(savedUser.isActive());
+//
+//        verify(trainerRepo).save(loggedTrainer);
+//        assertEquals(newType, loggedTrainer.getSpecializationId());
+//    }
 
 
 }

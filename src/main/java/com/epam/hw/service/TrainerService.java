@@ -1,5 +1,6 @@
 package com.epam.hw.service;
 
+import com.epam.hw.dto.UpdateTrainerDTO;
 import com.epam.hw.entity.*;
 import com.epam.hw.repository.TrainerRepository;
 import com.epam.hw.repository.TrainingRepository;
@@ -120,52 +121,43 @@ public class TrainerService {
         return true;
     }
 
-    public boolean toggleTrainerStatus() {
+    public boolean toggleTrainerStatus(String username) {
         isLoggedIn();
-        User user = auth.getLoggedInUser();
+        Trainer trainer = trainerRepository.findByUser_Username(username).orElseThrow(
+                () -> new EntityNotFoundException("Trainer not found: " + username));
+
+        User user = trainer.getUser();
         boolean newStatus = !user.isActive();
         user.setActive(newStatus);
+
         userRepository.save(user);
-        logger.info("Trainer {} status toggled to: {}", user.getUsername(), newStatus ? "ACTIVE" : "INACTIVE");
+        logger.info("Trainee status toggled to: {}", newStatus ? "ACTIVE" : "INACTIVE");
         return newStatus;
     }
 
-    public boolean updateTraineeProfile(Trainer updatedTrainerData) {
+    public Trainer updateTrainerProfile(String username,UpdateTrainerDTO dto) {
         isLoggedIn();
 
-        User currentUser = auth.getLoggedInUser();
-        User updatedUser = updatedTrainerData.getUser();
+        Trainer trainer = getTrainerByUsername(username);
 
-        if (updatedUser != null && updatedUser.getUsername() != null &&
-                !updatedUser.getUsername().equals(currentUser.getUsername())) {
-
-            String baseUsername = updatedUser.getUsername();
-            String newUsername = baseUsername;
-            int num = 1;
-
-            while (userRepository.findByUsername(newUsername).isPresent()) {
-                newUsername = baseUsername + num;
-                num++;
-            }
-
-            currentUser.setUsername(newUsername);
-            logger.debug("Trainer username updated to: {}", newUsername);
+        if(trainer==null) {
+            logger.warn("Trainer not found: {}", username);
+            throw new EntityNotFoundException("Trainer not found: " + username);
         }
 
-        if (updatedUser != null) {
-            currentUser.setFirstName(updatedUser.getFirstName());
-            currentUser.setLastName(updatedUser.getLastName());
-            currentUser.setPassword(updatedUser.getPassword());
-            currentUser.setActive(updatedUser.isActive());
+        User user = trainer.getUser();
+
+        user.setFirstName(dto.firstName());
+        user.setLastName(dto.lastName());
+
+        if(dto.isActive()){
+            toggleTrainerStatus(username);
         }
 
-        auth.getLoggedInUser().getTrainer().setSpecializationId(updatedTrainerData.getSpecializationId());
+        trainerRepository.save(trainer);
 
-        userRepository.save(currentUser);
-        trainerRepository.save(auth.getLoggedInUser().getTrainer());
+        return trainer;
 
-        logger.info("Trainer profile updated: {}", currentUser.getUsername());
-        return true;
     }
 
     public List<Training> getTrainerTrainings(String username, LocalDate from, LocalDate to, String trainerName) {

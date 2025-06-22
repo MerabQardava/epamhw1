@@ -96,4 +96,38 @@ public class TrainerController {
         return ResponseEntity.ok(profileDTO);
     }
 
+
+
+    @PutMapping("/{username}")
+    public ResponseEntity<UpdateTrainerReturnDTO> updateTrainerProfile(@PathVariable String username,
+                                                                       @RequestBody @Valid UpdateTrainerDTO dto){
+        try{
+            Trainer updatedTrainer = trainerService.updateTrainerProfile(username,new UpdateTrainerDTO(
+                    dto.firstName(),
+                    dto.lastName(),
+                    dto.specialization(),
+                    dto.isActive()
+            ));
+
+            Set<TraineesListDTO> traineesSet = updatedTrainer.getTrainees().stream()
+                    .map(trainer -> new TraineesListDTO(
+                            trainer.getUser().getUsername(),
+                            trainer.getUser().getFirstName(),
+                            trainer.getUser().getLastName()
+                    )).collect(Collectors.toSet());
+
+            return ResponseEntity.ok(new UpdateTrainerReturnDTO(
+                    updatedTrainer.getUser().getUsername(),
+                    updatedTrainer.getUser().getFirstName(),
+                    updatedTrainer.getUser().getLastName(),
+                    updatedTrainer.getSpecializationId(),
+                    updatedTrainer.getUser().isActive(),
+                    traineesSet
+            ));
+        }catch (EntityNotFoundException e){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
+
+    }
+
 }
