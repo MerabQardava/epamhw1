@@ -175,21 +175,23 @@ public class TrainerService {
         Optional<User> user = userRepository.findByUsername(username);
         if (user.isPresent()) {
             Trainee trainee = user.get().getTrainee();
+
             if (trainee == null) {
                 logger.warn("No trainee found for user: {}", username);
-                return Collections.emptyList();
+                throw new EntityNotFoundException("Trainer not found: " + username);
             }
 
             List<Trainer> allTrainers = trainerRepository.findAll();
             List<Trainer> unassignedTrainers = new ArrayList<>(allTrainers);
             unassignedTrainers.removeAll(trainee.getTrainers());
+            unassignedTrainers.removeIf(obj->!obj.getUser().isActive());
 
             logger.info("Unassigned trainers returned for trainee: {}", username);
             return unassignedTrainers;
         }
 
         logger.warn("No user found with username: {}", username);
-        return Collections.emptyList();
+        throw new EntityNotFoundException("Trainer not found: " + username);
     }
 
 

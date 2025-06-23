@@ -130,4 +130,33 @@ public class TrainerController {
 
     }
 
+    @GetMapping("/{username}/unassigned")
+    public ResponseEntity<Set<TrainersListDTO>> getUnassignedTrainers(@PathVariable String username){
+        try{
+            Set<TrainersListDTO> trainers = trainerService.getUnassignedTraineeTrainers(username).stream().map(
+                    trainer -> new TrainersListDTO(trainer.getUser().getUsername(),
+                            trainer.getUser().getFirstName(),
+                            trainer.getUser().getLastName(),
+                            trainer.getSpecializationId())
+            ).collect(Collectors.toSet());
+
+            return ResponseEntity.status(HttpStatus.OK).body(trainers);
+
+
+        }catch (EntityNotFoundException e){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
+
+    }
+
+    @PatchMapping("/{username}/toggle")
+    public ResponseEntity<String> toggleActivity(@PathVariable String username){
+        try{
+            trainerService.toggleTrainerStatus(username);
+            return ResponseEntity.status(HttpStatus.OK).body("Trainer status toggled successfully");
+        }catch (EntityNotFoundException e){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Trainer Not Found");
+        }
+    }
+
 }

@@ -142,7 +142,15 @@ public class TraineeController {
 
     }
 
-
+    @PatchMapping("/{username}/toggle")
+    public ResponseEntity<String> toggleActivity(@PathVariable String username){
+        try{
+            traineeService.toggleTraineeStatus(username);
+            return ResponseEntity.status(HttpStatus.OK).body("Trainee status toggled successfully");
+        }catch (EntityNotFoundException e){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Trainee Not Found");
+        }
+    }
 
 
 
