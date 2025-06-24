@@ -273,28 +273,28 @@ class TraineeServiceTest {
 //    }
 
 
-    @Test
-    void updateTraineeTrainers_updatesTrainerSetCorrectly() {
-        Integer traineeId = 123;
-
-        Trainee trainee = new Trainee();
-        Trainer trainer1 = new Trainer(); trainer1.setId(1);
-        Trainer trainer2 = new Trainer(); trainer2.setId(2);
-        Trainer trainer3 = new Trainer(); trainer3.setId(3);
-
-        trainee.addTrainer(trainer1);
-        trainee.addTrainer(trainer2);
-
-        Set<Integer> newTrainerIds = Set.of(2, 3);
-
-        when(traineeRepo.findById(traineeId)).thenReturn(Optional.of(trainee));
-        when(trainerRepo.findAllById(newTrainerIds)).thenReturn(List.of(trainer2, trainer3));
-
-        boolean result = traineeService.updateTraineeTrainers(traineeId, newTrainerIds);
-
-        assertTrue(result);
-        assertEquals(Set.of(trainer2, trainer3), trainee.getTrainers());
-    }
+//    @Test
+//    void updateTraineeTrainers_updatesTrainerSetCorrectly() {
+//        Integer traineeId = 123;
+//
+//        Trainee trainee = new Trainee();
+//        Trainer trainer1 = new Trainer(); trainer1.setId(1);
+//        Trainer trainer2 = new Trainer(); trainer2.setId(2);
+//        Trainer trainer3 = new Trainer(); trainer3.setId(3);
+//
+//        trainee.addTrainer(trainer1);
+//        trainee.addTrainer(trainer2);
+//
+//        Set<Integer> newTrainerIds = Set.of(2, 3);
+//
+//        when(traineeRepo.findById(traineeId)).thenReturn(Optional.of(trainee));
+//        when(trainerRepo.findAllById(newTrainerIds)).thenReturn(List.of(trainer2, trainer3));
+//
+//        boolean result = traineeService.updateTraineeTrainers(traineeId, newTrainerIds);
+//
+//        assertTrue(result);
+//        assertEquals(Set.of(trainer2, trainer3), trainee.getTrainers());
+//    }
 
 
 

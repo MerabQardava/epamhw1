@@ -192,20 +192,21 @@ public class TraineeService {
         return false;
     }
 
-    public boolean updateTraineeTrainers(Integer traineeId, Set<Integer> newTrainerIds) {
+    public Set<Trainer> updateTraineeTrainers(String username, Set<String> trainersList) {
         isLoggedIn();
-        logger.info("Updating trainers for traineeId: {}", traineeId);
+        logger.info("Updating trainers for traineeId: {}", username);
 
-        Trainee trainee = traineeRepository.findById(traineeId)
+        Trainee trainee = traineeRepository.findByUser_Username(username)
                 .orElseThrow(() -> new IllegalArgumentException("Trainee not found"));
 
-        Set<Trainer> newTrainers = new HashSet<>(trainerRepository.findAllById(newTrainerIds));
+        Set<Trainer> newTrainers = new HashSet<>(trainerRepository.findAllByUser_UsernameIn(trainersList));
 
         trainee.getTrainers().removeIf(t -> !newTrainers.contains(t));
         newTrainers.forEach(trainee::addTrainer);
 
-        logger.debug("Trainer list updated for traineeId: {}", traineeId);
-        return true;
+        logger.debug("Trainer list updated for traineeId: {}", username);
+        return trainee.getTrainers();
+
     }
 
     public void addTrainerToTrainee(String traineeUsername, String trainerUsername) {

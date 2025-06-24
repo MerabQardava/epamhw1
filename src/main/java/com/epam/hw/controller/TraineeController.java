@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -150,6 +151,32 @@ public class TraineeController {
         }catch (EntityNotFoundException e){
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Trainee Not Found");
         }
+    }
+
+
+    @PutMapping("/{username}/trainers")
+    public ResponseEntity<List<TrainersListDTO>> updateTrainerList(
+            @PathVariable String username,
+            @RequestBody Set<String> trainerUsernames
+    ){
+
+        try {
+            List<TrainersListDTO> updatedTrainers = traineeService.updateTraineeTrainers(username, trainerUsernames)
+                    .stream()
+                    .map(trainer -> new TrainersListDTO(
+                            trainer.getUser().getUsername(),
+                            trainer.getUser().getFirstName(),
+                            trainer.getUser().getLastName(),
+                            trainer.getSpecializationId()
+                    )).collect(Collectors.toList());
+
+            return ResponseEntity.ok(updatedTrainers);
+
+        }catch (Exception e){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
+
+
     }
 
 
