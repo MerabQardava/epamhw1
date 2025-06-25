@@ -2,6 +2,7 @@ package com.epam.hw.controller;
 
 import com.epam.hw.dto.*;
 import com.epam.hw.entity.Trainee;
+import com.epam.hw.entity.Training;
 import com.epam.hw.entity.User;
 import com.epam.hw.service.TraineeService;
 import com.epam.hw.storage.LoginResults;
@@ -175,7 +176,38 @@ public class TraineeController {
         }catch (Exception e){
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         }
+    }
 
+    @GetMapping("/{username}/trainings")
+    public ResponseEntity<List<TrainingDTO>> getTraineeTrainings(@PathVariable String username,
+                                                                 @ModelAttribute GetTrainingOptionsDTO options
+    ){
+        try {
+            Trainee trainee = traineeService.getTraineeByUsername(username);
+            if (trainee == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+            }
+
+            List<TrainingDTO> trainings = traineeService.getTraineeTrainings(
+                            username,
+                            options.startDate(),
+                            options.endDate(),
+                            options.trainerUsername(),
+                            options.trainingTypeName()
+                    ).stream()
+                    .map(training -> new TrainingDTO(
+                            training.getTrainingName(),
+                            training.getDate(),
+                            training.getTrainingType(),
+                            training.getDuration(),
+                            training.getTrainer().getUser().getUsername()
+                    ))
+                    .collect(Collectors.toList());
+
+            return ResponseEntity.ok(trainings);
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
 
     }
 

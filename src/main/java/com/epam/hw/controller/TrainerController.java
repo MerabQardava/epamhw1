@@ -12,6 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -157,6 +158,38 @@ public class TrainerController {
         }catch (EntityNotFoundException e){
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Trainer Not Found");
         }
+    }
+
+    @GetMapping("/{username}/trainings")
+    public ResponseEntity<List<TrainerTrainingDTO>> getTrainerTrainings(@PathVariable String username,
+                                                                 @ModelAttribute GetTrainerTrainingOptionsDTO options
+    ){
+        try {
+            Trainer trainer = trainerService.getTrainerByUsername(username);
+            if (trainer == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+            }
+
+            List<TrainerTrainingDTO> trainings = trainerService.getTrainerTrainings(
+                            username,
+                            options.startDate(),
+                            options.endDate(),
+                            options.traineeUsername()
+                    ).stream()
+                    .map(training -> new TrainerTrainingDTO(
+                            training.getTrainingName(),
+                            training.getDate(),
+                            training.getTrainingType(),
+                            training.getDuration(),
+                            training.getTrainee().getUser().getUsername()
+                    ))
+                    .collect(Collectors.toList());
+
+            return ResponseEntity.ok(trainings);
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
+
     }
 
 }

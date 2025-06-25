@@ -18,10 +18,11 @@ public interface TrainingRepository extends JpaRepository<Training, Integer> {
         JOIN tr.trainee t
         JOIN tr.trainer trn
         JOIN trn.user u
-        WHERE u.username = :trainerUsername
-        AND t.user.username = :traineeUsername
-        AND tr.date BETWEEN :from AND :to
-        AND tr.trainingType.trainingTypeName = :trainingTypeName
+        WHERE t.user.username = :traineeUsername
+        AND (:trainerUsername IS NULL OR u.username = :trainerUsername)
+        AND (COALESCE(:from, CAST('1900-01-01' AS date)) IS NULL OR tr.date >= COALESCE(:from, CAST('1900-01-01' AS date)))
+        AND (COALESCE(:to, CAST('2100-12-31' AS date)) IS NULL OR tr.date <= COALESCE(:to, CAST('2100-12-31' AS date)))
+        AND (:trainingTypeName IS NULL OR tr.trainingType.trainingTypeName = :trainingTypeName)
         """)
         List<Training> findTrainingsByTraineeCriteria(
                 @Param("traineeUsername") String traineeUsername,
@@ -38,8 +39,9 @@ public interface TrainingRepository extends JpaRepository<Training, Integer> {
         JOIN tr.trainer trn
         JOIN trn.user u
         WHERE u.username = :trainerUsername
-        AND t.user.username = :traineeUsername
-        AND tr.date BETWEEN :from AND :to
+        AND (:traineeUsername IS NULL OR t.user.username = :traineeUsername)
+        AND (COALESCE(:from, CAST('1900-01-01' AS date)) IS NULL OR tr.date >= COALESCE(:from, CAST('1900-01-01' AS date)))
+        AND (COALESCE(:to, CAST('2100-12-31' AS date)) IS NULL OR tr.date <= COALESCE(:to, CAST('2100-12-31' AS date)))
         """)
         List<Training> findTrainingsByTrainerCriteria(
                 @Param("trainerUsername") String trainerUsername,

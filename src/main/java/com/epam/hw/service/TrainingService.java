@@ -50,31 +50,31 @@ public class TrainingService {
         }
     }
     @Transactional
-    public Training addTraining(Integer traineeId, Integer trainerId, String trainingName, Integer trainingTypeId, LocalDate date, Integer duration) {
+    public Training addTraining(String traineeUsername, String trainerUsername, String trainingName, String trainingTypeName, LocalDate date, Integer duration) {
         isLoggedIn();
 
-        logger.debug("Attempting to add training for traineeId={}, trainerId={}, trainingTypeId={}, date={}, duration={}",
-                traineeId, trainerId, trainingTypeId, date, duration);
+        logger.debug("Attempting to add training for trainee={}, trainer={}, trainingType={}, date={}, duration={}",
+                traineeUsername, trainerUsername, trainingTypeName, date, duration);
 
-        Trainee trainee = traineeRepo.findById(traineeId).orElseThrow(() -> {
-            logger.warn("Trainee not found with ID: {}", traineeId);
+        Trainee trainee = traineeRepo.findByUser_Username(traineeUsername).orElseThrow(() -> {
+            logger.warn("Trainee not found with ID: {}", traineeUsername);
             return new RuntimeException("Trainee not found");
         });
 
-        Trainer trainer = trainerRepo.findById(trainerId).orElseThrow(() -> {
-            logger.warn("Trainer not found with ID: {}", trainerId);
+        Trainer trainer = trainerRepo.findByUser_Username(trainerUsername).orElseThrow(() -> {
+            logger.warn("Trainer not found with ID: {}", trainerUsername);
             return new RuntimeException("Trainer not found");
         });
 
-        TrainingType trainingType = trainingTypeRepo.findById(trainingTypeId).orElseThrow(() -> {
-            logger.warn("TrainingType not found with ID: {}", trainingTypeId);
+        TrainingType trainingType = trainingTypeRepo.findByTrainingTypeName(trainingTypeName).orElseThrow(() -> {
+            logger.warn("TrainingType not found with name: {}", trainingTypeName);
             return new RuntimeException("TrainingType not found");
         });
 
         Training training = new Training(trainee, trainer, trainingName, trainingType, date, duration);
         Training savedTraining = trainingRepo.save(training);
 
-        logger.info("Training created with ID: {} for trainee: {}, trainer: {}", savedTraining.getId(), traineeId, trainerId);
+        logger.info("Training created with ID: {} for trainee: {}, trainer: {}", savedTraining.getId(), traineeUsername, trainerUsername);
         return savedTraining;
     }
 
