@@ -1,10 +1,11 @@
 package com.epam.hw.controller;
 
 import com.epam.hw.dto.*;
-import com.epam.hw.entity.Trainee;
 import com.epam.hw.entity.Trainer;
 import com.epam.hw.service.TrainerService;
 import com.epam.hw.storage.LoginResults;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,10 +14,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+@Tag(name = "Trainer Controller", description = "Endpoints for managing trainers")
 @RestController
 @RequestMapping("/trainer")
 public class TrainerController {
@@ -27,6 +28,7 @@ public class TrainerController {
         this.trainerService=trainerService;
     }
 
+    @Operation(summary = "Register a new trainer and return generated credentials")
     @PostMapping()
     public ResponseEntity<CreateUserReturnDTO> registerTrainer(@RequestBody @Valid TrainerRegistrationDTO dto){
         Trainer saved = trainerService.createTrainer(dto.firstName(),dto.lastName(),dto.specialization());
@@ -36,7 +38,7 @@ public class TrainerController {
                 saved.getUser().getPassword()));
     }
 
-
+    @Operation(summary = "Login a trainer using username and password")
     @GetMapping("/login")
     public ResponseEntity<String> loginTrainer(@RequestParam String username,
                                                @RequestParam String password){
@@ -54,6 +56,8 @@ public class TrainerController {
 
     }
 
+
+    @Operation(summary = "Change trainer password after verifying old password")
     @PutMapping("/login/{username}")
     public ResponseEntity<String> changeLogin(@PathVariable String username,
                                               @RequestBody @Valid UserPasswordChangeDTO dto){
@@ -73,6 +77,8 @@ public class TrainerController {
 
     }
 
+
+    @Operation(summary = "Get full profile of a trainer by username")
     @GetMapping("/{username}")
     public ResponseEntity<TrainerProfileDTO> getTrainerProfile(@PathVariable String username) {
         Trainer trainer = trainerService.getTrainerByUsername(username);
@@ -98,7 +104,7 @@ public class TrainerController {
     }
 
 
-
+    @Operation(summary = "Update profile details of a trainer")
     @PutMapping("/{username}")
     public ResponseEntity<UpdateTrainerReturnDTO> updateTrainerProfile(@PathVariable String username,
                                                                        @RequestBody @Valid UpdateTrainerDTO dto){
@@ -131,6 +137,7 @@ public class TrainerController {
 
     }
 
+    @Operation(summary = "Get list of trainers not yet assigned to the given trainee")
     @GetMapping("/{username}/unassigned")
     public ResponseEntity<Set<TrainersListDTO>> getUnassignedTrainers(@PathVariable String username){
         try{
@@ -150,6 +157,7 @@ public class TrainerController {
 
     }
 
+    @Operation(summary = "Toggle active/inactive status of a trainer")
     @PatchMapping("/{username}/toggle")
     public ResponseEntity<String> toggleActivity(@PathVariable String username){
         try{
@@ -160,6 +168,7 @@ public class TrainerController {
         }
     }
 
+    @Operation(summary = "Get list of trainings conducted by the trainer, optionally filtered by date and trainee")
     @GetMapping("/{username}/trainings")
     public ResponseEntity<List<TrainerTrainingDTO>> getTrainerTrainings(@PathVariable String username,
                                                                  @ModelAttribute GetTrainerTrainingOptionsDTO options

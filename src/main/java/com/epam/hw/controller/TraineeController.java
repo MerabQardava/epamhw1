@@ -2,10 +2,10 @@ package com.epam.hw.controller;
 
 import com.epam.hw.dto.*;
 import com.epam.hw.entity.Trainee;
-import com.epam.hw.entity.Training;
-import com.epam.hw.entity.User;
 import com.epam.hw.service.TraineeService;
 import com.epam.hw.storage.LoginResults;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,10 +15,10 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+@Tag(name = "Trainee Controller", description = "Endpoints for managing trainees")
 @RestController
 @RequestMapping("/trainee")
 public class TraineeController {
@@ -29,6 +29,8 @@ public class TraineeController {
         this.traineeService = traineeService;
     }
 
+
+    @Operation(summary = "Register a new trainee and return generated credentials")
     @PostMapping()
     public ResponseEntity<CreateUserReturnDTO> registerTrainee(@RequestBody @Valid TraineeRegistrationDTO dto){
         Trainee saved = traineeService.createTrainee(dto.firstName(), dto.lastName(),LocalDate.parse(dto.dob()),dto.address());
@@ -38,6 +40,8 @@ public class TraineeController {
                 saved.getUser().getPassword()));
     }
 
+
+    @Operation(summary = "Login a trainee with username and password")
     @GetMapping("/login")
     public ResponseEntity<String> loginTrainee(@RequestParam String username,
                                                @RequestParam String password){
@@ -54,6 +58,7 @@ public class TraineeController {
         return ResponseEntity.ok("Login successful");
     }
 
+    @Operation(summary = "Change trainee password after verifying current credentials")
     @PutMapping("/login/{username}")
     public ResponseEntity<String> changeLogin(@PathVariable String username,
                                               @RequestBody @Valid UserPasswordChangeDTO dto){
@@ -72,6 +77,7 @@ public class TraineeController {
         }
     }
 
+    @Operation(summary = "Fetch full profile of the trainee by username")
     @GetMapping("/{username}")
     public ResponseEntity<TraineeProfileDTO> getTraineeProfile(@PathVariable String username) {
         Trainee trainee = traineeService.getTraineeByUsername(username);
@@ -98,6 +104,8 @@ public class TraineeController {
         return ResponseEntity.ok(profileDTO);
     }
 
+
+    @Operation(summary = "Delete a trainee by username")
     @DeleteMapping("/{username}")
     public ResponseEntity<String> deleteTrainee(@PathVariable String username) {
         Trainee trainee = traineeService.getTraineeByUsername(username);
@@ -109,6 +117,7 @@ public class TraineeController {
         return ResponseEntity.ok("Trainee with username of " + username + " deleted successfully");
     }
 
+    @Operation(summary = "Update the profile of an existing trainee")
     @PutMapping("/{username}")
     public ResponseEntity<UpdateTraineeReturnDTO> updateTraineeProfile(@PathVariable String username,
                                                                  @RequestBody @Valid UpdateTraineeDTO dto){
@@ -144,6 +153,8 @@ public class TraineeController {
 
     }
 
+
+    @Operation(summary = "Toggle active/inactive status of the trainee")
     @PatchMapping("/{username}/toggle")
     public ResponseEntity<String> toggleActivity(@PathVariable String username){
         try{
@@ -155,6 +166,7 @@ public class TraineeController {
     }
 
 
+    @Operation(summary = "Update the list of trainers assigned to a trainee")
     @PutMapping("/{username}/trainers")
     public ResponseEntity<List<TrainersListDTO>> updateTrainerList(
             @PathVariable String username,
@@ -178,6 +190,7 @@ public class TraineeController {
         }
     }
 
+    @Operation(summary = "Get filtered training sessions of a trainee by date range, trainer or type")
     @GetMapping("/{username}/trainings")
     public ResponseEntity<List<TrainingDTO>> getTraineeTrainings(@PathVariable String username,
                                                                  @ModelAttribute GetTrainingOptionsDTO options

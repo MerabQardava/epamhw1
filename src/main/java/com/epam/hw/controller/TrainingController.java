@@ -4,6 +4,8 @@ package com.epam.hw.controller;
 import com.epam.hw.dto.CreateTrainingDTO;
 import com.epam.hw.entity.TrainingType;
 import com.epam.hw.service.TrainingService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -12,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 import java.util.List;
 
+@Tag(name = "Training Controller", description = "Endpoints for managing trainings")
 @RestController
 @RequestMapping("/training")
 public class TrainingController {
@@ -21,6 +24,7 @@ public class TrainingController {
         this.trainingService=trainingService;
     }
 
+    @Operation(summary = "Get list of all available training types")
     @GetMapping
     public ResponseEntity<List<TrainingType>> getTrainingTypes(){
         try{
@@ -31,6 +35,7 @@ public class TrainingController {
         }
     }
 
+    @Operation(summary = "Create a new training session between trainee and trainer")
     @PostMapping
     public ResponseEntity<String> addTraining(@RequestBody @Valid CreateTrainingDTO dto) {
         try {
