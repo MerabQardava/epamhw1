@@ -1,6 +1,7 @@
 package com.epam.hw.controller;
 
 import com.epam.hw.dto.*;
+import com.epam.hw.entity.Trainee;
 import com.epam.hw.entity.Trainer;
 import com.epam.hw.service.TrainerService;
 import com.epam.hw.storage.LoginResults;
@@ -61,19 +62,14 @@ public class TrainerController {
     @PutMapping("/login/{username}")
     public ResponseEntity<String> changeLogin(@PathVariable String username,
                                               @RequestBody @Valid UserPasswordChangeDTO dto){
-        try {
-            Trainer trainer = trainerService.getTrainerByUsername(username);
-            if(trainer == null){
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Trainer with username of "+username+" not found");
-            }else if(!trainer.getUser().getPassword().equals(dto.oldPassword())){
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid Credentials");
-            }else{
-                trainerService.changePassword(username, dto.newPassword());
-                return ResponseEntity.ok("Password changed successfully");
-            }
-        }catch (EntityNotFoundException e){
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Trainer with username of "+username+" not found");
+
+        Trainer trainer = trainerService.getTrainerByUsername(username);
+        if (!trainer.getUser().getPassword().equals(dto.oldPassword())) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid Credentials");
         }
+
+        trainerService.changePassword(username, dto.newPassword());
+        return ResponseEntity.ok("Password changed successfully");
 
     }
 
@@ -82,9 +78,6 @@ public class TrainerController {
     @GetMapping("/{username}")
     public ResponseEntity<TrainerProfileDTO> getTrainerProfile(@PathVariable String username) {
         Trainer trainer = trainerService.getTrainerByUsername(username);
-        if (trainer == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
-        }
 
         Set<TraineesListDTO> traineesSet = trainer.getTrainees().stream()
                 .map(trainee -> new TraineesListDTO(
@@ -108,7 +101,7 @@ public class TrainerController {
     @PutMapping("/{username}")
     public ResponseEntity<UpdateTrainerReturnDTO> updateTrainerProfile(@PathVariable String username,
                                                                        @RequestBody @Valid UpdateTrainerDTO dto){
-        try{
+
             Trainer updatedTrainer = trainerService.updateTrainerProfile(username,new UpdateTrainerDTO(
                     dto.firstName(),
                     dto.lastName(),
@@ -131,16 +124,14 @@ public class TrainerController {
                     updatedTrainer.getUser().isActive(),
                     traineesSet
             ));
-        }catch (EntityNotFoundException e){
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
-        }
+
 
     }
 
     @Operation(summary = "Get list of trainers not yet assigned to the given trainee")
     @GetMapping("/{username}/unassigned")
     public ResponseEntity<Set<TrainersListDTO>> getUnassignedTrainers(@PathVariable String username){
-        try{
+
             Set<TrainersListDTO> trainers = trainerService.getUnassignedTraineeTrainers(username).stream().map(
                     trainer -> new TrainersListDTO(trainer.getUser().getUsername(),
                             trainer.getUser().getFirstName(),
@@ -150,22 +141,13 @@ public class TrainerController {
 
             return ResponseEntity.status(HttpStatus.OK).body(trainers);
 
-
-        }catch (EntityNotFoundException e){
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
-        }
-
     }
 
     @Operation(summary = "Toggle active/inactive status of a trainer")
     @PatchMapping("/{username}/toggle")
     public ResponseEntity<String> toggleActivity(@PathVariable String username){
-        try{
             trainerService.toggleTrainerStatus(username);
             return ResponseEntity.status(HttpStatus.OK).body("Trainer status toggled successfully");
-        }catch (EntityNotFoundException e){
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Trainer Not Found");
-        }
     }
 
     @Operation(summary = "Get list of trainings conducted by the trainer, optionally filtered by date and trainee")
@@ -173,11 +155,7 @@ public class TrainerController {
     public ResponseEntity<List<TrainerTrainingDTO>> getTrainerTrainings(@PathVariable String username,
                                                                  @ModelAttribute GetTrainerTrainingOptionsDTO options
     ){
-        try {
             Trainer trainer = trainerService.getTrainerByUsername(username);
-            if (trainer == null) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
-            }
 
             List<TrainerTrainingDTO> trainings = trainerService.getTrainerTrainings(
                             username,
@@ -195,9 +173,6 @@ public class TrainerController {
                     .collect(Collectors.toList());
 
             return ResponseEntity.ok(trainings);
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
-        }
 
     }
 

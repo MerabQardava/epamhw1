@@ -9,6 +9,7 @@ import com.epam.hw.repository.TrainerRepository;
 import com.epam.hw.repository.TrainingRepository;
 import com.epam.hw.repository.TrainingTypeRepository;
 import com.epam.hw.storage.Auth;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,17 +59,17 @@ public class TrainingService {
 
         Trainee trainee = traineeRepo.findByUser_Username(traineeUsername).orElseThrow(() -> {
             logger.warn("Trainee not found with ID: {}", traineeUsername);
-            return new RuntimeException("Trainee not found");
+            return new EntityNotFoundException("Trainee not found");
         });
 
         Trainer trainer = trainerRepo.findByUser_Username(trainerUsername).orElseThrow(() -> {
             logger.warn("Trainer not found with ID: {}", trainerUsername);
-            return new RuntimeException("Trainer not found");
+            return new EntityNotFoundException("Trainer not found");
         });
 
         TrainingType trainingType = trainingTypeRepo.findByTrainingTypeName(trainingTypeName).orElseThrow(() -> {
             logger.warn("TrainingType not found with name: {}", trainingTypeName);
-            return new RuntimeException("TrainingType not found");
+            return new EntityNotFoundException("TrainingType not found");
         });
 
         Training training = new Training(trainee, trainer, trainingName, trainingType, date, duration);

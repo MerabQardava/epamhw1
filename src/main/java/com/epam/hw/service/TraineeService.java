@@ -58,13 +58,8 @@ public class TraineeService {
         isLoggedIn();
         logger.debug("Fetching trainee by username: {}", username);
 
-        Optional<User> optionalUser = userRepository.findByUsername(username);
-        if (optionalUser.isPresent()) {
-            logger.info("User found for username: {}", username);
-            return optionalUser.get().getTrainee();
-        }
-        logger.warn("No user found with username: {}", username);
-        return null;
+        return traineeRepository.findByUser_Username(username).orElseThrow(
+                () -> new EntityNotFoundException("Trainee not found for username: " + username));
     }
 
     public Trainee createTrainee(String firstName,String lastName,LocalDate dateOfBirth,String address) {
@@ -127,11 +122,6 @@ public class TraineeService {
         logger.info("Updating profile for logged-in trainee.");
 
         Trainee trainee = getTraineeByUsername(username);
-        if (trainee == null) {
-            logger.warn("Trainee not found for username: {}",username);
-            throw new EntityNotFoundException("Trainee not found: " + username);
-        }
-
         User currentUser = trainee.getUser();
 
         currentUser.setFirstName(updatedTraineeData.firstName());
@@ -159,8 +149,7 @@ public class TraineeService {
 
     public boolean toggleTraineeStatus(String username) {
         isLoggedIn();
-        Trainee trainee = traineeRepository.findByUser_Username(username).orElseThrow(
-                () -> new EntityNotFoundException("Trainee not found: " + username));
+        Trainee trainee = getTraineeByUsername(username);
 
         User user = trainee.getUser();
         boolean newStatus = !user.isActive();
@@ -173,22 +162,24 @@ public class TraineeService {
 
     public boolean deleteByUsername(String username) {
         isLoggedIn();
-        logger.warn("Deleting user with username: {}", username);
+        logger.warn("Deleting trainee with username: {}", username);
 
         Optional<User> optionalUser = userRepository.findByUsername(username);
         if (optionalUser.isPresent()) {
             User user = optionalUser.get();
             Trainee trainee = user.getTrainee();
+
             if (trainee != null) {
                 traineeRepository.delete(trainee);
-                logger.debug("Deleted trainee entity for user: {}", username);
+                logger.info("Trainee and user deleted: {}", username);
+                return true;
+            } else {
+                logger.warn("User {} is not a trainee, delete aborted.", username);
             }
-            userRepository.delete(user);
-            logger.info("User deleted: {}", username);
-            return true;
+        } else {
+            logger.warn("No user found with username: {}", username);
         }
 
-        logger.warn("Delete failed – no user found with username: {}", username);
         return false;
     }
 
@@ -196,8 +187,7 @@ public class TraineeService {
         isLoggedIn();
         logger.info("Updating trainers for traineeId: {}", username);
 
-        Trainee trainee = traineeRepository.findByUser_Username(username)
-                .orElseThrow(() -> new IllegalArgumentException("Trainee not found"));
+        Trainee trainee = getTraineeByUsername(username);
 
         Set<Trainer> newTrainers = new HashSet<>(trainerRepository.findAllByUser_UsernameIn(trainersList));
 
@@ -213,20 +203,26 @@ public class TraineeService {
         isLoggedIn();
         logger.info("Assigning trainer {} to trainee {}", trainerUsername, traineeUsername);
 
-        Trainee trainee = traineeRepository.findByUser_Username(traineeUsername).orElseThrow();
-        Trainer trainer = trainerRepository.findByUser_Username(trainerUsername).orElseThrow();
+        Trainee trainee = traineeRepository.findByUser_Username(traineeUsername)
+                .orElseThrow(() -> new EntityNotFoundException("Trainee not found: " + traineeUsername));
+        Trainer trainer = trainerRepository.findByUser_Username(trainerUsername)
+                .orElseThrow(() -> new EntityNotFoundException("Trainer not found: " + trainerUsername));
 
         trainee.addTrainer(trainer);
+        logger.debug("Trainer {} assigned to trainee {}", trainerUsername, traineeUsername);
     }
 
     public void removeTrainerFromTrainee(String traineeUsername, String trainerUsername) {
         isLoggedIn();
-        logger.info("Removing trainer {} from trainee {}", traineeUsername, trainerUsername);
+        logger.info("Removing trainer {} from trainee {}", trainerUsername, traineeUsername);
 
-        Trainee trainee = traineeRepository.findByUser_Username(traineeUsername).orElseThrow();
-        Trainer trainer = trainerRepository.findByUser_Username(trainerUsername).orElseThrow();
+        Trainee trainee = traineeRepository.findByUser_Username(traineeUsername)
+                .orElseThrow(() -> new EntityNotFoundException("Trainee not found: " + traineeUsername));
+        Trainer trainer = trainerRepository.findByUser_Username(trainerUsername)
+                .orElseThrow(() -> new EntityNotFoundException("Trainer not found: " + trainerUsername));
 
         trainee.removeTrainer(trainer);
+        logger.debug("Trainer {} removed from trainee {}", trainerUsername, traineeUsername);
     }
 
     public List<Training> getTraineeTrainings(

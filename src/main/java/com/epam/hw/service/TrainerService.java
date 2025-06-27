@@ -51,10 +51,8 @@ public class TrainerService {
 
     public Trainer createTrainer(String firstName,String lastName,String trainingTypeName) {
 
-        Optional<TrainingType> trainingTypeOptional = trainingTypeRepository.findByTrainingTypeName(trainingTypeName);
-        if (trainingTypeOptional.isEmpty()) {
-            throw new IllegalStateException("Training type " + trainingTypeName + " does not exist.");
-        }
+        TrainingType trainingType = trainingTypeRepository.findByTrainingTypeName(trainingTypeName)
+                .orElseThrow(() -> new IllegalStateException("Training type " + trainingTypeName + " does not exist."));
 
         User user = new User(firstName,lastName);
 
@@ -66,7 +64,7 @@ public class TrainerService {
             num++;
         }
 
-        Trainer trainer = new Trainer(trainingTypeOptional.get(), user);
+        Trainer trainer = new Trainer(trainingType, user);
 
         trainerRepository.save(trainer);
         logger.info("Trainer created with username: {}", trainer.getUser().getUsername());
@@ -86,7 +84,7 @@ public class TrainerService {
         return ok ? LoginResults.SUCCESS : LoginResults.BAD_PASSWORD;
     }
 
-    public boolean LogOut() {
+    public boolean logOut() {
         logger.info("Trainer logout attempt.");
         return auth.logOut();
     }
@@ -95,14 +93,10 @@ public class TrainerService {
         isLoggedIn();
         logger.debug("Fetching trainer by username: {}", username);
 
-        Optional<User> optionalUser = userRepository.findByUsername(username);
-        if (optionalUser.isPresent()) {
-            logger.info("Trainer found for username: {}", username);
-            return optionalUser.get().getTrainer();
-        }
-
-        logger.warn("No trainer found for username: {}", username);
-        return null;
+        return trainerRepository.findByUser_Username(username).orElseThrow(() -> {
+            logger.warn("No trainer found for username: {}", username);
+            return new EntityNotFoundException("Trainer not found for username: " + username);
+        });
     }
 
     public boolean changePassword(String username, String newPassword) {
@@ -123,15 +117,14 @@ public class TrainerService {
 
     public boolean toggleTrainerStatus(String username) {
         isLoggedIn();
-        Trainer trainer = trainerRepository.findByUser_Username(username).orElseThrow(
-                () -> new EntityNotFoundException("Trainer not found: " + username));
+        Trainer trainer = getTrainerByUsername(username);
 
         User user = trainer.getUser();
         boolean newStatus = !user.isActive();
         user.setActive(newStatus);
 
         userRepository.save(user);
-        logger.info("Trainee status toggled to: {}", newStatus ? "ACTIVE" : "INACTIVE");
+        logger.info("Trainer status toggled to: {}", newStatus ? "ACTIVE" : "INACTIVE");
         return newStatus;
     }
 
@@ -140,10 +133,6 @@ public class TrainerService {
 
         Trainer trainer = getTrainerByUsername(username);
 
-        if(trainer==null) {
-            logger.warn("Trainer not found: {}", username);
-            throw new EntityNotFoundException("Trainer not found: " + username);
-        }
 
         User user = trainer.getUser();
 
@@ -190,7 +179,7 @@ public class TrainerService {
             return unassignedTrainers;
         }
 
-        logger.warn("No user found with username: {}", username);
+        logger.warn("No trainee found with username: {}", username);
         throw new EntityNotFoundException("Trainer not found: " + username);
     }
 

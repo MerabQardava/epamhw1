@@ -1,6 +1,5 @@
 package com.epam.hw.service;
 
-import com.epam.hw.entity.Trainee;
 import com.epam.hw.entity.Trainer;
 import com.epam.hw.entity.TrainingType;
 import com.epam.hw.entity.User;
@@ -108,7 +107,7 @@ public class TrainerServiceTest {
     void testLogout() {
         when(auth.logOut()).thenReturn(true);
 
-        boolean result = trainerService.LogOut();
+        boolean result = trainerService.logOut();
 
         assertTrue(result);
         verify(auth).logOut();

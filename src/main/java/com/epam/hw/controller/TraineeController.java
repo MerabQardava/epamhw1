@@ -61,29 +61,20 @@ public class TraineeController {
     @Operation(summary = "Change trainee password after verifying current credentials")
     @PutMapping("/login/{username}")
     public ResponseEntity<String> changeLogin(@PathVariable String username,
-                                              @RequestBody @Valid UserPasswordChangeDTO dto){
-        try {
-            Trainee trainee = traineeService.getTraineeByUsername(username);
-            if(trainee == null){
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Trainee with username of "+username+" not found");
-            }else if(!trainee.getUser().getPassword().equals(dto.oldPassword())){
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid Credentials");
-            }else{
-                traineeService.changePassword(username, dto.newPassword());
-                return ResponseEntity.ok("Password changed successfully");
-            }
-        }catch (EntityNotFoundException e){
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Trainee with username of "+username+" not found");
+                                              @RequestBody @Valid UserPasswordChangeDTO dto) {
+        Trainee trainee = traineeService.getTraineeByUsername(username);
+        if (!trainee.getUser().getPassword().equals(dto.oldPassword())) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid Credentials");
         }
+
+        traineeService.changePassword(username, dto.newPassword());
+        return ResponseEntity.ok("Password changed successfully");
     }
 
     @Operation(summary = "Fetch full profile of the trainee by username")
     @GetMapping("/{username}")
     public ResponseEntity<TraineeProfileDTO> getTraineeProfile(@PathVariable String username) {
         Trainee trainee = traineeService.getTraineeByUsername(username);
-        if (trainee == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
-        }
 
         Set<TrainersListDTO> trainersSet = trainee.getTrainers().stream()
                 .map(trainer -> new TrainersListDTO(
@@ -108,48 +99,46 @@ public class TraineeController {
     @Operation(summary = "Delete a trainee by username")
     @DeleteMapping("/{username}")
     public ResponseEntity<String> deleteTrainee(@PathVariable String username) {
-        Trainee trainee = traineeService.getTraineeByUsername(username);
-        if (trainee == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Trainee with username of " + username + " not found");
-        }
+        boolean deleted = traineeService.deleteByUsername(username);
 
-        traineeService.deleteByUsername(username);
-        return ResponseEntity.ok("Trainee with username of " + username + " deleted successfully");
+        if (deleted) {
+            return ResponseEntity.ok("Trainee with username " + username + " deleted successfully");
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Trainee with username " + username + " not found");
+        }
     }
 
     @Operation(summary = "Update the profile of an existing trainee")
     @PutMapping("/{username}")
     public ResponseEntity<UpdateTraineeReturnDTO> updateTraineeProfile(@PathVariable String username,
                                                                  @RequestBody @Valid UpdateTraineeDTO dto){
-        try{
-            Trainee updatedTrainee = traineeService.updateTraineeProfile(username,new UpdateTraineeDTO(
-                    dto.firstName(),
-                    dto.lastName(),
-                    dto.dob(),
-                    dto.address(),
-                    dto.isActive()
-            ));
 
-            Set<TrainersListDTO> trainersSet = updatedTrainee.getTrainers().stream()
-                    .map(trainer -> new TrainersListDTO(
-                            trainer.getUser().getUsername(),
-                            trainer.getUser().getFirstName(),
-                            trainer.getUser().getLastName(),
-                            trainer.getSpecializationId()
-                    )).collect(Collectors.toSet());
+        Trainee updatedTrainee = traineeService.updateTraineeProfile(username,new UpdateTraineeDTO(
+                dto.firstName(),
+                dto.lastName(),
+                dto.dob(),
+                dto.address(),
+                dto.isActive()
+        ));
 
-            return ResponseEntity.ok(new UpdateTraineeReturnDTO(
-                    updatedTrainee.getUser().getUsername(),
-                    updatedTrainee.getUser().getFirstName(),
-                    updatedTrainee.getUser().getLastName(),
-                    updatedTrainee.getDateOfBirth().toString(),
-                    updatedTrainee.getAddress(),
-                    updatedTrainee.getUser().isActive(),
-                    trainersSet
-            ));
-        }catch (EntityNotFoundException e){
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
-        }
+        Set<TrainersListDTO> trainersSet = updatedTrainee.getTrainers().stream()
+                .map(trainer -> new TrainersListDTO(
+                        trainer.getUser().getUsername(),
+                        trainer.getUser().getFirstName(),
+                        trainer.getUser().getLastName(),
+                        trainer.getSpecializationId()
+                )).collect(Collectors.toSet());
+
+        return ResponseEntity.ok(new UpdateTraineeReturnDTO(
+                updatedTrainee.getUser().getUsername(),
+                updatedTrainee.getUser().getFirstName(),
+                updatedTrainee.getUser().getLastName(),
+                updatedTrainee.getDateOfBirth().toString(),
+                updatedTrainee.getAddress(),
+                updatedTrainee.getUser().isActive(),
+                trainersSet
+        ));
+
 
     }
 
@@ -157,12 +146,9 @@ public class TraineeController {
     @Operation(summary = "Toggle active/inactive status of the trainee")
     @PatchMapping("/{username}/toggle")
     public ResponseEntity<String> toggleActivity(@PathVariable String username){
-        try{
-            traineeService.toggleTraineeStatus(username);
-            return ResponseEntity.status(HttpStatus.OK).body("Trainee status toggled successfully");
-        }catch (EntityNotFoundException e){
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Trainee Not Found");
-        }
+        traineeService.toggleTraineeStatus(username);
+        return ResponseEntity.status(HttpStatus.OK).body("Trainee status toggled successfully");
+
     }
 
 
@@ -173,21 +159,19 @@ public class TraineeController {
             @RequestBody Set<String> trainerUsernames
     ){
 
-        try {
-            List<TrainersListDTO> updatedTrainers = traineeService.updateTraineeTrainers(username, trainerUsernames)
-                    .stream()
-                    .map(trainer -> new TrainersListDTO(
-                            trainer.getUser().getUsername(),
-                            trainer.getUser().getFirstName(),
-                            trainer.getUser().getLastName(),
-                            trainer.getSpecializationId()
-                    )).collect(Collectors.toList());
 
-            return ResponseEntity.ok(updatedTrainers);
+        List<TrainersListDTO> updatedTrainers = traineeService.updateTraineeTrainers(username, trainerUsernames)
+                .stream()
+                .map(trainer -> new TrainersListDTO(
+                        trainer.getUser().getUsername(),
+                        trainer.getUser().getFirstName(),
+                        trainer.getUser().getLastName(),
+                        trainer.getSpecializationId()
+                )).collect(Collectors.toList());
 
-        }catch (Exception e){
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
-        }
+        return ResponseEntity.ok(updatedTrainers);
+
+
     }
 
     @Operation(summary = "Get filtered training sessions of a trainee by date range, trainer or type")
@@ -195,32 +179,27 @@ public class TraineeController {
     public ResponseEntity<List<TrainingDTO>> getTraineeTrainings(@PathVariable String username,
                                                                  @ModelAttribute GetTrainingOptionsDTO options
     ){
-        try {
-            Trainee trainee = traineeService.getTraineeByUsername(username);
-            if (trainee == null) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
-            }
+        Trainee trainee = traineeService.getTraineeByUsername(username);
 
-            List<TrainingDTO> trainings = traineeService.getTraineeTrainings(
-                            username,
-                            options.startDate(),
-                            options.endDate(),
-                            options.trainerUsername(),
-                            options.trainingTypeName()
-                    ).stream()
-                    .map(training -> new TrainingDTO(
-                            training.getTrainingName(),
-                            training.getDate(),
-                            training.getTrainingType(),
-                            training.getDuration(),
-                            training.getTrainer().getUser().getUsername()
-                    ))
-                    .collect(Collectors.toList());
 
-            return ResponseEntity.ok(trainings);
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
-        }
+        List<TrainingDTO> trainings = traineeService.getTraineeTrainings(
+                        username,
+                        options.startDate(),
+                        options.endDate(),
+                        options.trainerUsername(),
+                        options.trainingTypeName()
+                ).stream()
+                .map(training -> new TrainingDTO(
+                        training.getTrainingName(),
+                        training.getDate(),
+                        training.getTrainingType(),
+                        training.getDuration(),
+                        training.getTrainer().getUser().getUsername()
+                ))
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(trainings);
+
 
     }
 
