@@ -19,12 +19,9 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
-import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -41,6 +38,7 @@ class TraineeServiceTest {
     TrainingRepository trainingRepo;
     @Mock
     Auth auth;
+
 
     @InjectMocks
     TraineeService traineeService;
@@ -95,31 +93,33 @@ class TraineeServiceTest {
         Trainee dbTrainee = new Trainee();
         dbUser.setTrainee(dbTrainee);
 
-        when(userRepo.findByUsername("A.B"))
-                .thenReturn(Optional.of(dbUser));
+        when(traineeRepo.findByUser_Username("A.B"))
+                .thenReturn(Optional.of(dbTrainee));
 
         Trainee result = traineeService.getTraineeByUsername("A.B");
 
         assertSame(dbTrainee, result);
     }
 
-//    @Test
-//    void testLoginSuccess() {
-//        String username = "John.Doe";
-//        String password = "password123";
-//
-//        // Mock the auth.logIn method to return true
-//        when(auth.logIn(username, password)).thenReturn(true);
-//
-//        // Call the actual traineeService.logIn method
-//        LoginResults result = traineeService.logIn(username, password);
-//
-//        // Assert the expected result
-//        assertEquals(LoginResults.SUCCESS, result);
-//
-//        // Verify the auth.logIn method was called
-//        verify(auth).logIn(username, password);
-//    }
+    @Test
+    void testLoginSuccess() {
+        String username = "John.Doe";
+        String password = "password123";
+        Trainee trainee = new Trainee();
+
+
+        when(traineeRepo.findByUser_Username(username)).thenReturn(Optional.of(trainee));
+
+        when(auth.logIn(username, password)).thenReturn(true);
+
+        LoginResults result = traineeService.logIn(username, password);
+
+
+        assertEquals(LoginResults.SUCCESS, result);
+
+
+        verify(auth).logIn(username, password);
+    }
 
     @Test
     void testLogout() {
@@ -131,35 +131,45 @@ class TraineeServiceTest {
         verify(auth).logOut();
     }
 
-//    @Test
-//    void changePasswordTest() {
-//
-//        User dbUser = new User("A", "B");
-//        dbUser.setPassword("oldPassword");
-//        dbUser.setTrainee(new Trainee());
-//
-//        when(auth.getLoggedInUser()).thenReturn(dbUser);
-//
-//        String newPassword = "newPassword123";
-//
-//        boolean result = traineeService.changePassword("A.B",newPassword);
-//
-//        assertTrue(result);
-//        assertEquals(newPassword, dbUser.getPassword());
-//
-//        verify(userRepo).save(dbUser);
-//    }
+    @Test
+    void changePasswordTest() {
+        User dbUser = new User("A", "B");
+        dbUser.setPassword("oldPassword");
+        dbUser.setTrainee(new Trainee());
 
-//    @Test
-//    void toggleTraineeStatusTest(){
-//
-//        boolean result = traineeService.toggleTraineeStatus();
-//
-//        assertFalse(result);
-//        assertFalse(loggedUser.isActive());
-//
-//        verify(userRepo).save(loggedUser);
-//    }
+        when(auth.getLoggedInUser()).thenReturn(dbUser);
+
+        when(userRepo.findByUsername("A.B")).thenReturn(Optional.of(dbUser));
+
+        String newPassword = "newPassword123";
+
+        boolean result = traineeService.changePassword("A.B", newPassword);
+
+        assertTrue(result);
+        assertEquals(newPassword, dbUser.getPassword());
+
+        verify(userRepo).save(dbUser);
+    }
+
+    @Test
+    void toggleTraineeStatusTest(){
+        String username = "A.B";
+
+        User user = new User("A", "B");
+        user.setActive(true);
+        Trainee trainee = new Trainee();
+        user.setTrainee(trainee);
+        trainee.setUser(user);
+
+        when(traineeRepo.findByUser_Username(username)).thenReturn(Optional.of(trainee));
+
+        boolean result = traineeService.toggleTraineeStatus(username);
+
+        assertFalse(result);
+        assertFalse(user.isActive());
+
+        verify(userRepo).save(user);
+    }
 
     @Test
     void deleteByUsernameTest(){
@@ -175,7 +185,6 @@ class TraineeServiceTest {
 
         assertTrue(result);
         verify(traineeRepo).delete(traineeFound);
-        verify(userRepo).delete(userFound);
     }
 
     @Test

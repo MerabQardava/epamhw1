@@ -1,10 +1,12 @@
 package com.epam.hw.service;
 
+import com.epam.hw.dto.UpdateTrainerDTO;
 import com.epam.hw.entity.Trainer;
 import com.epam.hw.entity.TrainingType;
 import com.epam.hw.entity.User;
 import com.epam.hw.repository.*;
 import com.epam.hw.storage.Auth;
+import com.epam.hw.storage.LoginResults;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -22,16 +24,19 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class TrainerServiceTest {
+
     @Mock
-    TraineeRepository traineeRepo;
+    TrainerRepository trainerRepository;
+
     @Mock
-    UserRepository userRepo;
+    UserRepository userRepository;
+
     @Mock
-    TrainerRepository trainerRepo;
-    @Mock
-    TrainingRepository trainingRepo;
+    TrainingRepository trainingRepository;
+
     @Mock
     Auth auth;
+
     @Mock
     TrainingTypeRepository trainingTypeRepository;
 
@@ -47,61 +52,74 @@ public class TrainerServiceTest {
         loggedTrainer = new Trainer();
         loggedUser.setTrainer(loggedTrainer);
 
-
         Mockito.lenient().when(auth.getLoggedInUser()).thenReturn(loggedUser);
     }
-
 
     @Test
     void createTrainerTest() {
         String first = "John", last = "Doe";
 
-        when(userRepo.findByUsername("John.Doe"))
+        when(userRepository.findByUsername("John.Doe"))
                 .thenReturn(Optional.of(new User()));
-        when(userRepo.findByUsername("John.Doe1"))
+        when(userRepository.findByUsername("John.Doe1"))
                 .thenReturn(Optional.empty());
 
         ArgumentCaptor<Trainer> captor = ArgumentCaptor.forClass(Trainer.class);
 
         when(trainingTypeRepository.findByTrainingTypeName("Java"))
                 .thenReturn(Optional.of(new TrainingType("Java")));
+
         trainerService.createTrainer(first, last, "Java");
 
-        verify(trainerRepo).save(captor.capture());
+        verify(trainerRepository).save(captor.capture());
         Trainer saved = captor.getValue();
 
         assertEquals("John.Doe1", saved.getUser().getUsername());
-        assertEquals(first,       saved.getUser().getFirstName());
-        assertEquals(last,        saved.getUser().getLastName());
-        assertEquals("Java",saved.getSpecializationId().getTrainingTypeName());
+        assertEquals(first, saved.getUser().getFirstName());
+        assertEquals(last, saved.getUser().getLastName());
+        assertEquals("Java", saved.getSpecializationId().getTrainingTypeName());
     }
 
     @Test
-    void getTraineeByUsernameTest() {
-        User dbUser = new User("A","B");
+    void getTrainerByUsernameTest() {
+        User dbUser = new User("A", "B");
         Trainer dbTrainer = new Trainer();
         dbUser.setTrainer(dbTrainer);
 
-        when(userRepo.findByUsername("A.B"))
-                .thenReturn(Optional.of(dbUser));
+        when(trainerRepository.findByUser_Username("A.B"))
+                .thenReturn(Optional.of(dbTrainer));
 
         Trainer result = trainerService.getTrainerByUsername("A.B");
 
         assertSame(dbTrainer, result);
     }
 
-//    @Test
-//    void testLoginSuccess() {
-//        String username = "john.doe";
-//        String password = "password123";
-//
-//        when(auth.logIn(username, password)).thenReturn(true);
-//
-//        boolean result = trainerService.logIn(username, password);
-//
-//        assertTrue(result);
-//        verify(auth).logIn(username, password);
-//    }
+    @Test
+    void testLoginSuccess() {
+        String username = "John.Doe";
+        String password = "password123";
+        Trainer trainer = new Trainer();
+
+        when(trainerRepository.findByUser_Username(username)).thenReturn(Optional.of(trainer));
+        when(auth.logIn(username, password)).thenReturn(true);
+
+        LoginResults result = trainerService.logIn(username, password);
+
+        assertEquals(LoginResults.SUCCESS, result);
+        verify(auth).logIn(username, password);
+    }
+
+    @Test
+    void testLoginUserNotFound() {
+        String username = "nonexistent";
+        String password = "password123";
+
+        when(trainerRepository.findByUser_Username(username)).thenReturn(Optional.empty());
+
+        LoginResults result = trainerService.logIn(username, password);
+
+        assertEquals(LoginResults.USER_NOT_FOUND, result);
+    }
 
     @Test
     void testLogout() {
@@ -115,68 +133,65 @@ public class TrainerServiceTest {
 
     @Test
     void changePasswordTest() {
-
         User dbUser = new User("A", "B");
         dbUser.setPassword("oldPassword");
         dbUser.setTrainer(new Trainer());
 
         when(auth.getLoggedInUser()).thenReturn(dbUser);
+        when(userRepository.findByUsername("A.B")).thenReturn(Optional.of(dbUser));
 
         String newPassword = "newPassword123";
 
-        boolean result = trainerService.changePassword("A.B",newPassword);
+        boolean result = trainerService.changePassword("A.B", newPassword);
 
         assertTrue(result);
         assertEquals(newPassword, dbUser.getPassword());
 
-        verify(userRepo).save(dbUser);
+        verify(userRepository).save(dbUser);
     }
 
+    @Test
+    void toggleTrainerStatusTest() {
+        String username = "A.B";
 
-//    @Test
-//    void toggleTrainerStatusTest(){
-//
-//        boolean result = trainerService.toggleTrainerStatus();
-//
-//        assertFalse(result);
-//        assertFalse(loggedUser.isActive());
-//
-//        verify(userRepo).save(loggedUser);
-//    }
+        User user = new User("A", "B");
+        user.setActive(true);
+        Trainer trainer = new Trainer();
+        user.setTrainer(trainer);
+        trainer.setUser(user);
 
-//    @Test
-//    void updateTrainerProfile_updatesAllFieldsAndPersists() {
-//        TrainingType newType = new TrainingType("Java");
-//        User incomingUser = new User("NewFirst", "NewLast");
-//        incomingUser.setUsername("desired");   // desired username
-//        incomingUser.setPassword("newpw");
-//        incomingUser.setActive(false);
-//
-//        Trainer incomingTrainer = new Trainer();
-//        incomingTrainer.setUser(incomingUser);
-//        incomingTrainer.setSpecializationId(newType);
-//
-//        when(userRepo.findByUsername("desired"))
-//                .thenReturn(Optional.of(new User()));
-//        when(userRepo.findByUsername("desired1"))
-//                .thenReturn(Optional.empty());
-//
-//        boolean result = trainerService.updateTraineeProfile(incomingTrainer);
-//        assertTrue(result);
-//
-//        ArgumentCaptor<User> userCap = ArgumentCaptor.forClass(User.class);
-//        verify(userRepo).save(userCap.capture());
-//        User savedUser = userCap.getValue();
-//
-//        assertEquals("desired1", savedUser.getUsername());
-//        assertEquals("NewFirst", savedUser.getFirstName());
-//        assertEquals("NewLast",  savedUser.getLastName());
-//        assertEquals("newpw",    savedUser.getPassword());
-//        assertFalse(savedUser.isActive());
-//
-//        verify(trainerRepo).save(loggedTrainer);
-//        assertEquals(newType, loggedTrainer.getSpecializationId());
-//    }
+        when(trainerRepository.findByUser_Username(username)).thenReturn(Optional.of(trainer));
 
+        boolean result = trainerService.toggleTrainerStatus(username);
 
+        assertFalse(result);
+        assertFalse(user.isActive());
+
+        verify(userRepository).save(user);
+    }
+
+    @Test
+    void updateTrainerProfileTest() {
+        String username = "John.Doe";
+        String newFirstName = "Johnny";
+        String newLastName = "Smith";
+
+        User existingUser = new User("John", "Doe");
+        existingUser.setActive(true);
+        Trainer existingTrainer = new Trainer();
+        existingUser.setTrainer(existingTrainer);
+        existingTrainer.setUser(existingUser);
+
+        UpdateTrainerDTO updateDTO = new UpdateTrainerDTO(newFirstName, newLastName, "Java",false);
+
+        when(trainerRepository.findByUser_Username(username)).thenReturn(Optional.of(existingTrainer));
+
+        Trainer result = trainerService.updateTrainerProfile(username, updateDTO);
+
+        assertEquals(newFirstName, result.getUser().getFirstName());
+        assertEquals(newLastName, result.getUser().getLastName());
+        assertTrue(result.getUser().isActive());
+
+        verify(trainerRepository).save(existingTrainer);
+    }
 }
