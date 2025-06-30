@@ -38,12 +38,12 @@ public class TrainingController {
     }
 
     @Operation(summary = "Create a new training session between trainee and trainer")
-    @PostMapping("/trainees/{traineeUsername}/trainers/{trainerUsername}")
+    @PostMapping("/trainee/{traineeUsername}/trainer/{trainerUsername}")
     public ResponseEntity<String> addTraining(
             @PathVariable String traineeUsername,
             @PathVariable String trainerUsername,
             @RequestBody @Valid CreateTrainingDTO dto) {
-        log.info("POST /trainings/trainees/{}/trainers/{} - Creating training: type={}, date={}, duration={}",
+        log.info("POST /training/trainee/{}/trainer/{} - Creating training: type={}, date={}, duration={}",
                 traineeUsername, trainerUsername, dto.trainingTypeName(), dto.date(), dto.duration());
 
         trainingService.addTraining(traineeUsername, trainerUsername, dto.trainingName(),
