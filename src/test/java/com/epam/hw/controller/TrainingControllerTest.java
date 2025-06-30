@@ -42,15 +42,13 @@ class TrainingControllerTest {
     @Test
     void addTrainingTest() {
         CreateTrainingDTO dto = new CreateTrainingDTO(
-                "trainee.user",
-                "trainer.user",
                 "Java Training",
                 "Java",
                 "2025-01-01",
                 60
         );
 
-        ResponseEntity<String> response = trainingController.addTraining(dto);
+        ResponseEntity<String> response = trainingController.addTraining("trainee.user","trainer.user",dto);
 
         assertEquals(201, response.getStatusCodeValue());
         assertEquals("Training added successfully", response.getBody());

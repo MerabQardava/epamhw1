@@ -175,7 +175,7 @@ public class TraineeControllerTest {
         String username = "John.Doe";
 
 
-        mockMvc.perform(patch("/trainee/{username}/toggle", username))
+        mockMvc.perform(patch("/trainee/{username}/status", username))
                 .andExpect(status().isOk())
                 .andExpect(content().string("Trainee status toggled successfully"));
 

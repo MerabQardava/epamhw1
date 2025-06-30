@@ -29,7 +29,7 @@ public class TrainingController {
     }
 
     @Operation(summary = "Get list of all available training types")
-    @GetMapping
+    @GetMapping("/types")
     public ResponseEntity<List<TrainingType>> getTrainingTypes(){
         log.info("GET /training - Fetching all training types");
         List<TrainingType> types = trainingService.getTrainingTypes();
@@ -38,13 +38,18 @@ public class TrainingController {
     }
 
     @Operation(summary = "Create a new training session between trainee and trainer")
-    @PostMapping
-    public ResponseEntity<String> addTraining(@RequestBody @Valid CreateTrainingDTO dto) {
-        log.info("POST /training - Creating training: trainee={}, trainer={}, type={}, date={}, duration={}",
-                dto.traineeUsername(), dto.trainerUsername(), dto.trainingTypeName(), dto.date(), dto.duration());
-        trainingService.addTraining(dto.traineeUsername(), dto.trainerUsername(), dto.trainingName(),
+    @PostMapping("/trainees/{traineeUsername}/trainers/{trainerUsername}")
+    public ResponseEntity<String> addTraining(
+            @PathVariable String traineeUsername,
+            @PathVariable String trainerUsername,
+            @RequestBody @Valid CreateTrainingDTO dto) {
+        log.info("POST /trainings/trainees/{}/trainers/{} - Creating training: type={}, date={}, duration={}",
+                traineeUsername, trainerUsername, dto.trainingTypeName(), dto.date(), dto.duration());
+
+        trainingService.addTraining(traineeUsername, trainerUsername, dto.trainingName(),
                 dto.trainingTypeName(), LocalDate.parse(dto.date()), dto.duration());
-        log.info("Training created successfully for trainee {} and trainer {}", dto.traineeUsername(), dto.trainerUsername());
+
+        log.info("Training created successfully for trainee {} and trainer {}", traineeUsername, trainerUsername);
         return ResponseEntity.status(HttpStatus.CREATED).body("Training added successfully");
     }
 

@@ -160,9 +160,9 @@ public class TraineeController {
 
 
     @Operation(summary = "Toggle active/inactive status of the trainee")
-    @PatchMapping("/{username}/toggle")
+    @PatchMapping("/{username}/status")
     public ResponseEntity<String> toggleActivity(@PathVariable String username){
-        log.info("PATCH /trainee/{}/toggle - Toggling status", username);
+        log.info("PATCH /trainee/{}/status - Toggling status", username);
         traineeService.toggleTraineeStatus(username);
         log.info("Trainee {} status toggled", username);
         return ResponseEntity.status(HttpStatus.OK).body("Trainee status toggled successfully");

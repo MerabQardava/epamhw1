@@ -142,9 +142,9 @@ public class TrainerController {
     }
 
     @Operation(summary = "Get list of trainers not yet assigned to the given trainee")
-    @GetMapping("/{username}/unassigned")
+    @GetMapping("/{username}/unassigned-trainers")
     public ResponseEntity<Set<TrainersListDTO>> getUnassignedTrainers(@PathVariable String username){
-        log.info("GET /trainer/{}/unassigned - Fetching unassigned trainers", username);
+        log.info("GET /trainer/{}/unassigned-trainers - Fetching unassigned trainers", username);
 
         Set<TrainersListDTO> trainers = trainerService.getUnassignedTraineeTrainers(username).stream().map(
                 trainer -> new TrainersListDTO(trainer.getUser().getUsername(),
@@ -159,9 +159,9 @@ public class TrainerController {
     }
 
     @Operation(summary = "Toggle active/inactive status of a trainer")
-    @PatchMapping("/{username}/toggle")
+    @PatchMapping("/{username}/status")
     public ResponseEntity<String> toggleActivity(@PathVariable String username){
-        log.info("PATCH /trainer/{}/toggle - Toggling activity", username);
+        log.info("PATCH /trainer/{}/status - Toggling activity", username);
         trainerService.toggleTrainerStatus(username);
         log.info("Trainer status toggled: {}", username);
         return ResponseEntity.status(HttpStatus.OK).body("Trainer status toggled successfully");

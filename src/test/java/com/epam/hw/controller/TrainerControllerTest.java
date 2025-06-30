@@ -188,7 +188,7 @@ public class TrainerControllerTest {
 
     @Test
     void testToggleTrainerStatus_success() throws Exception {
-        mockMvc.perform(patch("/trainer/john.smith/toggle"))
+        mockMvc.perform(patch("/trainer/john.smith/status"))
                 .andExpect(status().isOk())
                 .andExpect(content().string("Trainer status toggled successfully"));
 

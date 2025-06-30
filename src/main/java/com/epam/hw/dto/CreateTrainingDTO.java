@@ -4,8 +4,6 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 public record CreateTrainingDTO(
-        @NotBlank String traineeUsername,
-        @NotBlank String trainerUsername,
         @NotBlank String trainingName,
         @NotBlank String trainingTypeName,
         @NotBlank String date,
