@@ -142,20 +142,19 @@ public class TrainerController {
     }
 
     @Operation(summary = "Get list of trainers not yet assigned to the given trainee")
-    @GetMapping("/{username}/unassigned-trainers")
-    public ResponseEntity<Set<TrainersListDTO>> getUnassignedTrainers(@PathVariable String username){
-        log.info("GET /trainer/{}/unassigned-trainers - Fetching unassigned trainers", username);
+    @GetMapping("/unassigned-trainers/{traineeUsername}")
+    public ResponseEntity<Set<TrainersListDTO>> getUnassignedTrainers(@PathVariable String traineeUsername){
+        log.info("GET /trainer/unassigned-trainers/{} - Fetching unassigned trainers", traineeUsername);
 
-        Set<TrainersListDTO> trainers = trainerService.getUnassignedTraineeTrainers(username).stream().map(
+        Set<TrainersListDTO> trainers = trainerService.getUnassignedTraineeTrainers(traineeUsername).stream().map(
                 trainer -> new TrainersListDTO(trainer.getUser().getUsername(),
                         trainer.getUser().getFirstName(),
                         trainer.getUser().getLastName(),
                         trainer.getSpecializationId())
         ).collect(Collectors.toSet());
 
-        log.info("Fetched {} unassigned trainers for trainee: {}", trainers.size(), username);
+        log.info("Fetched {} unassigned trainers for trainee: {}", trainers.size(), traineeUsername);
         return ResponseEntity.status(HttpStatus.OK).body(trainers);
-
     }
 
     @Operation(summary = "Toggle active/inactive status of a trainer")
