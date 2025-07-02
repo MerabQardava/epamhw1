@@ -13,16 +13,17 @@ import java.util.List;
 public class DatabaseInitializer {
     private static final Logger logger = LoggerFactory.getLogger(DatabaseInitializer.class);
     private final TrainingTypeRepository trainingTypeRepository;
+    private final List<String> defaultTrainingTypes;
 
-    public DatabaseInitializer(TrainingTypeRepository trainingTypeRepository) {
+    public DatabaseInitializer(TrainingTypeRepository trainingTypeRepository,List<String> defaultTrainingTypes) {
         this.trainingTypeRepository = trainingTypeRepository;
+        this.defaultTrainingTypes = defaultTrainingTypes;
     }
 
     @PostConstruct
     public void init() {
-        List<String> defaults = List.of("JavaScript", "Python", "C#", "Spring");
 
-        for (String name : defaults) {
+        for (String name : defaultTrainingTypes) {
             boolean exists = trainingTypeRepository.existsByTrainingTypeName(name);
             if (!exists) {
                 trainingTypeRepository.save(new TrainingType(name));

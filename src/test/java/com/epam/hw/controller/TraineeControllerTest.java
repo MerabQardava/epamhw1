@@ -1,12 +1,14 @@
 package com.epam.hw.controller;
 
-
 import com.epam.hw.dto.*;
 import com.epam.hw.entity.*;
+import com.epam.hw.monitoring.CustomMetricsService;
 import com.epam.hw.service.TraineeService;
 import com.epam.hw.storage.LoginResults;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.micrometer.core.instrument.Timer;
 import org.junit.jupiter.api.Test;
+import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -19,7 +21,7 @@ import java.util.List;
 import java.util.Set;
 
 import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -35,6 +37,9 @@ public class TraineeControllerTest {
     @MockBean
     private TraineeService traineeService;
 
+    @MockBean
+    private CustomMetricsService metricsService;
+
     @Test
     void testRegisterTrainee() throws Exception {
         TraineeRegistrationDTO dto = new TraineeRegistrationDTO("John", "Doe", "2000-01-01", "Tbilisi");
@@ -44,48 +49,80 @@ public class TraineeControllerTest {
         user.setPassword("pass123");
         trainee.setUser(user);
 
-        Mockito.when(traineeService.createTrainee(anyString(), anyString(), any(LocalDate.class), anyString())).thenReturn(trainee);
+        Timer requestTimer = mock(Timer.class);
+        Timer.Sample timerSample = mock(Timer.Sample.class);
 
-        mockMvc.perform(post("/trainee")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(dto)))
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.username").value("john.doe"))
-                .andExpect(jsonPath("$.password").value("pass123"));
+        when(metricsService.getRequestTimer()).thenReturn(requestTimer);
+        when(traineeService.createTrainee(anyString(), anyString(), any(LocalDate.class), anyString())).thenReturn(trainee);
+
+        try (MockedStatic<Timer> timerMock = mockStatic(Timer.class)) {
+            timerMock.when(Timer::start).thenReturn(timerSample);
+
+            mockMvc.perform(post("/trainee")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(dto)))
+                    .andExpect(status().isCreated())
+                    .andExpect(jsonPath("$.username").value("john.doe"))
+                    .andExpect(jsonPath("$.password").value("pass123"));
+        }
     }
 
     @Test
     void testLogin_Success() throws Exception {
-        Mockito.when(traineeService.logIn("john.doe", "pass123")).thenReturn(LoginResults.SUCCESS);
+        Timer requestTimer = mock(Timer.class);
+        Timer.Sample timerSample = mock(Timer.Sample.class);
 
-        mockMvc.perform(get("/trainee/login")
-                        .param("username", "john.doe")
-                        .param("password", "pass123"))
-                .andExpect(status().isOk())
-                .andExpect(content().string("Login successful"));
+        when(metricsService.getRequestTimer()).thenReturn(requestTimer);
+        when(traineeService.logIn("john.doe", "pass123")).thenReturn(LoginResults.SUCCESS);
+
+        try (MockedStatic<Timer> timerMock = mockStatic(Timer.class)) {
+            timerMock.when(Timer::start).thenReturn(timerSample);
+
+            mockMvc.perform(get("/trainee/login")
+                            .param("username", "john.doe")
+                            .param("password", "pass123"))
+                    .andExpect(status().isOk())
+                    .andExpect(content().string("Login successful"));
+        }
     }
 
     @Test
     void testLogin_BadPassword() throws Exception {
-        Mockito.when(traineeService.logIn("john.doe", "wrong")).thenReturn(LoginResults.BAD_PASSWORD);
+        Timer requestTimer = mock(Timer.class);
+        Timer.Sample timerSample = mock(Timer.Sample.class);
 
-        mockMvc.perform(get("/trainee/login")
-                        .param("username", "john.doe")
-                        .param("password", "wrong"))
-                .andExpect(status().isUnauthorized())
-                .andExpect(content().string("Invalid Credentials"));
+        when(metricsService.getRequestTimer()).thenReturn(requestTimer);
+        when(traineeService.logIn("john.doe", "wrong")).thenReturn(LoginResults.BAD_PASSWORD);
+
+        try (MockedStatic<Timer> timerMock = mockStatic(Timer.class)) {
+            timerMock.when(Timer::start).thenReturn(timerSample);
+
+            mockMvc.perform(get("/trainee/login")
+                            .param("username", "john.doe")
+                            .param("password", "wrong"))
+                    .andExpect(status().isUnauthorized())
+                    .andExpect(content().string("Invalid Credentials"));
+        }
     }
 
     @Test
     void testLoginUser_NotFound() throws Exception {
-        Mockito.when(traineeService.logIn("nonexistent", "pass"))
+        Timer requestTimer = mock(Timer.class);
+        Timer.Sample timerSample = mock(Timer.Sample.class);
+
+        when(metricsService.getRequestTimer()).thenReturn(requestTimer);
+        when(traineeService.logIn("nonexistent", "pass"))
                 .thenReturn(LoginResults.USER_NOT_FOUND);
 
-        mockMvc.perform(get("/trainee/login")
-                        .param("username", "nonexistent")
-                        .param("password", "pass"))
-                .andExpect(status().isUnauthorized())
-                .andExpect(content().string("Trainee with username of nonexistent not found"));
+        try (MockedStatic<Timer> timerMock = mockStatic(Timer.class)) {
+            timerMock.when(Timer::start).thenReturn(timerSample);
+
+            mockMvc.perform(get("/trainee/login")
+                            .param("username", "nonexistent")
+                            .param("password", "pass"))
+                    .andExpect(status().isUnauthorized())
+                    .andExpect(content().string("Trainee with username of nonexistent not found"));
+        }
     }
 
     @Test
@@ -96,13 +133,21 @@ public class TraineeControllerTest {
         user.setPassword("oldPass");
         trainee.setUser(user);
 
-        Mockito.when(traineeService.getTraineeByUsername("john.doe")).thenReturn(trainee);
+        Timer requestTimer = mock(Timer.class);
+        Timer.Sample timerSample = mock(Timer.Sample.class);
 
-        mockMvc.perform(put("/trainee/login/john.doe")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(dto)))
-                .andExpect(status().isOk())
-                .andExpect(content().string("Password changed successfully"));
+        when(metricsService.getRequestTimer()).thenReturn(requestTimer);
+        when(traineeService.getTraineeByUsername("john.doe")).thenReturn(trainee);
+
+        try (MockedStatic<Timer> timerMock = mockStatic(Timer.class)) {
+            timerMock.when(Timer::start).thenReturn(timerSample);
+
+            mockMvc.perform(put("/trainee/login/john.doe")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(dto)))
+                    .andExpect(status().isOk())
+                    .andExpect(content().string("Password changed successfully"));
+        }
     }
 
     @Test
@@ -113,13 +158,21 @@ public class TraineeControllerTest {
         user.setPassword("correctPass");
         trainee.setUser(user);
 
-        Mockito.when(traineeService.getTraineeByUsername("john.doe")).thenReturn(trainee);
+        Timer requestTimer = mock(Timer.class);
+        Timer.Sample timerSample = mock(Timer.Sample.class);
 
-        mockMvc.perform(put("/trainee/login/john.doe")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(dto)))
-                .andExpect(status().isUnauthorized())
-                .andExpect(content().string("Invalid Credentials"));
+        when(metricsService.getRequestTimer()).thenReturn(requestTimer);
+        when(traineeService.getTraineeByUsername("john.doe")).thenReturn(trainee);
+
+        try (MockedStatic<Timer> timerMock = mockStatic(Timer.class)) {
+            timerMock.when(Timer::start).thenReturn(timerSample);
+
+            mockMvc.perform(put("/trainee/login/john.doe")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(dto)))
+                    .andExpect(status().isUnauthorized())
+                    .andExpect(content().string("Invalid Credentials"));
+        }
     }
 
     @Test
@@ -132,55 +185,84 @@ public class TraineeControllerTest {
 
         Trainee trainee = new Trainee(LocalDate.of(2000, 1, 1), "Tbilisi", traineeUser);
 
+        Timer requestTimer = mock(Timer.class);
+        Timer.Sample timerSample = mock(Timer.Sample.class);
 
-        Mockito.when(traineeService.getTraineeByUsername("John.Doe")).thenReturn(trainee);
-        System.out.println(traineeService.getTraineeByUsername("John.Doe"));
+        when(metricsService.getRequestTimer()).thenReturn(requestTimer);
+        when(traineeService.getTraineeByUsername("John.Doe")).thenReturn(trainee);
 
-        mockMvc.perform(get("/trainee/John.Doe"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.firstName").value("John"))
-                .andExpect(jsonPath("$.lastName").value("Doe"))
-                .andExpect(jsonPath("$.dob").value("2000-01-01"))
-                .andExpect(jsonPath("$.address").value("Tbilisi"));
+        try (MockedStatic<Timer> timerMock = mockStatic(Timer.class)) {
+            timerMock.when(Timer::start).thenReturn(timerSample);
+
+            mockMvc.perform(get("/trainee/John.Doe"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.firstName").value("John"))
+                    .andExpect(jsonPath("$.lastName").value("Doe"))
+                    .andExpect(jsonPath("$.dob").value("2000-01-01"))
+                    .andExpect(jsonPath("$.address").value("Tbilisi"));
+        }
     }
 
     @Test
     void testDeleteTrainee_Success() throws Exception {
         String username = "John.Doe";
 
-        Mockito.when(traineeService.deleteByUsername(username)).thenReturn(true);
+        Timer requestTimer = mock(Timer.class);
+        Timer.Sample timerSample = mock(Timer.Sample.class);
 
-        mockMvc.perform(delete("/trainee/" + username))
-                .andExpect(status().isOk())
-                .andExpect(content().string("Trainee with username John.Doe deleted successfully"));
+        when(metricsService.getRequestTimer()).thenReturn(requestTimer);
+        when(traineeService.deleteByUsername(username)).thenReturn(true);
 
-        Mockito.verify(traineeService, times(1)).deleteByUsername(username);
+        try (MockedStatic<Timer> timerMock = mockStatic(Timer.class)) {
+            timerMock.when(Timer::start).thenReturn(timerSample);
+
+            mockMvc.perform(delete("/trainee/" + username))
+                    .andExpect(status().isOk())
+                    .andExpect(content().string("Trainee with username John.Doe deleted successfully"));
+
+            verify(traineeService, times(1)).deleteByUsername(username);
+        }
     }
 
     @Test
     void testDeleteTrainee_NotFound() throws Exception {
         String username = "NonExistent.User";
 
-        Mockito.when(traineeService.deleteByUsername(username)).thenReturn(false);
+        Timer requestTimer = mock(Timer.class);
+        Timer.Sample timerSample = mock(Timer.Sample.class);
 
-        mockMvc.perform(delete("/trainee/" + username))
-                .andExpect(status().isNotFound())
-                .andExpect(content().string("Trainee with username NonExistent.User not found"));
+        when(metricsService.getRequestTimer()).thenReturn(requestTimer);
+        when(traineeService.deleteByUsername(username)).thenReturn(false);
 
-        Mockito.verify(traineeService, times(1)).deleteByUsername(username);
+        try (MockedStatic<Timer> timerMock = mockStatic(Timer.class)) {
+            timerMock.when(Timer::start).thenReturn(timerSample);
+
+            mockMvc.perform(delete("/trainee/" + username))
+                    .andExpect(status().isNotFound())
+                    .andExpect(content().string("Trainee with username NonExistent.User not found"));
+
+            verify(traineeService, times(1)).deleteByUsername(username);
+        }
     }
 
     @Test
     void testToggleTraineeStatus_Success() throws Exception {
         String username = "John.Doe";
 
+        Timer requestTimer = mock(Timer.class);
+        Timer.Sample timerSample = mock(Timer.Sample.class);
 
-        mockMvc.perform(patch("/trainee/{username}/status", username))
-                .andExpect(status().isOk())
-                .andExpect(content().string("Trainee status toggled successfully"));
+        when(metricsService.getRequestTimer()).thenReturn(requestTimer);
 
+        try (MockedStatic<Timer> timerMock = mockStatic(Timer.class)) {
+            timerMock.when(Timer::start).thenReturn(timerSample);
 
-        Mockito.verify(traineeService, times(1)).toggleTraineeStatus(username);
+            mockMvc.perform(patch("/trainee/{username}/status", username))
+                    .andExpect(status().isOk())
+                    .andExpect(content().string("Trainee status toggled successfully"));
+
+            verify(traineeService, times(1)).toggleTraineeStatus(username);
+        }
     }
 
     @Test
@@ -194,19 +276,27 @@ public class TraineeControllerTest {
         user.setActive(true);
         Trainee updated = new Trainee(LocalDate.parse("2000-01-01"), "Tbilisi", user);
 
-        Mockito.when(traineeService.updateTraineeProfile(eq(username), any(UpdateTraineeDTO.class)))
+        Timer requestTimer = mock(Timer.class);
+        Timer.Sample timerSample = mock(Timer.Sample.class);
+
+        when(metricsService.getRequestTimer()).thenReturn(requestTimer);
+        when(traineeService.updateTraineeProfile(eq(username), any(UpdateTraineeDTO.class)))
                 .thenReturn(updated);
 
-        mockMvc.perform(put("/trainee/" + username)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(dto)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.username").value("john.doe"))
-                .andExpect(jsonPath("$.firstName").value("John"))
-                .andExpect(jsonPath("$.lastName").value("Doe"))
-                .andExpect(jsonPath("$.dob").value("2000-01-01"))
-                .andExpect(jsonPath("$.address").value("Tbilisi"))
-                .andExpect(jsonPath("$.isActive").value(true));
+        try (MockedStatic<Timer> timerMock = mockStatic(Timer.class)) {
+            timerMock.when(Timer::start).thenReturn(timerSample);
+
+            mockMvc.perform(put("/trainee/" + username)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(dto)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.username").value("john.doe"))
+                    .andExpect(jsonPath("$.firstName").value("John"))
+                    .andExpect(jsonPath("$.lastName").value("Doe"))
+                    .andExpect(jsonPath("$.dob").value("2000-01-01"))
+                    .andExpect(jsonPath("$.address").value("Tbilisi"))
+                    .andExpect(jsonPath("$.isActive").value(true));
+        }
     }
 
     @Test
@@ -222,21 +312,28 @@ public class TraineeControllerTest {
         TrainingType trainingType = new TrainingType();
         trainingType.setTrainingTypeName("Java");
 
-
         Trainer trainer = new Trainer();
         trainer.setUser(trainerUser);
         trainer.setSpecializationId(trainingType);
 
-        Mockito.when(traineeService.updateTraineeTrainers(eq(username), anySet()))
+        Timer requestTimer = mock(Timer.class);
+        Timer.Sample timerSample = mock(Timer.Sample.class);
+
+        when(metricsService.getRequestTimer()).thenReturn(requestTimer);
+        when(traineeService.updateTraineeTrainers(eq(username), anySet()))
                 .thenReturn(Set.of(trainer));
 
-        mockMvc.perform(put("/trainee/" + username + "/trainers")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(trainerUsernames)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].username").value("trainer1"))
-                .andExpect(jsonPath("$[0].firstName").value("Trainer"))
-                .andExpect(jsonPath("$[0].lastName").value("One"));
+        try (MockedStatic<Timer> timerMock = mockStatic(Timer.class)) {
+            timerMock.when(Timer::start).thenReturn(timerSample);
+
+            mockMvc.perform(put("/trainee/" + username + "/trainers")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(trainerUsernames)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$[0].username").value("trainer1"))
+                    .andExpect(jsonPath("$[0].firstName").value("Trainer"))
+                    .andExpect(jsonPath("$[0].lastName").value("One"));
+        }
     }
 
     @Test
@@ -262,21 +359,24 @@ public class TraineeControllerTest {
         // Setup Training
         Training training = new Training(trainee, trainer, "OOP Basics", trainingType, LocalDate.of(2024, 6, 1), 90);
 
-        Mockito.when(traineeService.getTraineeByUsername(username)).thenReturn(trainee);
-        Mockito.when(traineeService.getTraineeTrainings(eq(username), any(), any(), any(), any()))
+        Timer requestTimer = mock(Timer.class);
+        Timer.Sample timerSample = mock(Timer.Sample.class);
+
+        when(metricsService.getRequestTimer()).thenReturn(requestTimer);
+        when(traineeService.getTraineeByUsername(username)).thenReturn(trainee);
+        when(traineeService.getTraineeTrainings(eq(username), any(), any(), any(), any()))
                 .thenReturn(List.of(training));
 
-        mockMvc.perform(get("/trainee/{username}/trainings", username))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].name").value("OOP Basics"))
-                .andExpect(jsonPath("$[0].date").value("2024-06-01"))
-                .andExpect(jsonPath("$[0].trainingType.trainingTypeName").value("Java"))
-                .andExpect(jsonPath("$[0].duration").value(90))
-                .andExpect(jsonPath("$[0].trainerName").value("trainer1"));
+        try (MockedStatic<Timer> timerMock = mockStatic(Timer.class)) {
+            timerMock.when(Timer::start).thenReturn(timerSample);
+
+            mockMvc.perform(get("/trainee/{username}/trainings", username))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$[0].name").value("OOP Basics"))
+                    .andExpect(jsonPath("$[0].date").value("2024-06-01"))
+                    .andExpect(jsonPath("$[0].trainingType.trainingTypeName").value("Java"))
+                    .andExpect(jsonPath("$[0].duration").value(90))
+                    .andExpect(jsonPath("$[0].trainerName").value("trainer1"));
+        }
     }
-
-
-
-
-
 }

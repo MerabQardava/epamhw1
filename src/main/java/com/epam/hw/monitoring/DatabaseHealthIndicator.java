@@ -3,11 +3,13 @@ package com.epam.hw.monitoring;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+
 
 @Component
 public class DatabaseHealthIndicator implements HealthIndicator {

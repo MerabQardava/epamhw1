@@ -4,6 +4,7 @@ import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
 import lombok.Getter;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -11,6 +12,8 @@ public class CustomMetricsService {
     private final MeterRegistry registry;
     @Getter
     private final Timer requestTimer;
+
+
 
     public CustomMetricsService(MeterRegistry registry) {
         this.registry = registry;
