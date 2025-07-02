@@ -2,11 +2,12 @@ package com.epam.hw.controller;
 
 import com.epam.hw.dto.*;
 import com.epam.hw.entity.Trainee;
+import com.epam.hw.monitoring.CustomMetricsService;
 import com.epam.hw.service.TraineeService;
 import com.epam.hw.storage.LoginResults;
+import io.micrometer.core.instrument.Timer;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,19 +26,27 @@ import java.util.stream.Collectors;
 @Slf4j
 public class TraineeController {
     private final TraineeService traineeService;
+    private final CustomMetricsService metricsService;
+
 
     @Autowired
-    public TraineeController(TraineeService traineeService){
+    public TraineeController(TraineeService traineeService,CustomMetricsService metricsService) {
         this.traineeService = traineeService;
+        this.metricsService = metricsService;
     }
 
 
     @Operation(summary = "Register a new trainee and return generated credentials")
     @PostMapping()
     public ResponseEntity<CreateUserReturnDTO> registerTrainee(@RequestBody @Valid TraineeRegistrationDTO dto){
+        metricsService.recordRequest("POST", "/trainee");
+        Timer.Sample sample = Timer.start();
+
         log.info("POST /trainee - Registering new trainee: {} {}", dto.firstName(), dto.lastName());
         Trainee saved = traineeService.createTrainee(dto.firstName(), dto.lastName(),LocalDate.parse(dto.dob()),dto.address());
         log.info("Trainee registered successfully with username: {}", saved.getUser().getUsername());
+
+        sample.stop(metricsService.getRequestTimer());
         return ResponseEntity.status(HttpStatus.CREATED).body(new CreateUserReturnDTO(
                 saved.getUser().getUsername(),
                 saved.getUser().getPassword()));
@@ -48,18 +57,23 @@ public class TraineeController {
     @GetMapping("/login")
     public ResponseEntity<String> loginTrainee(@RequestParam String username,
                                                @RequestParam String password){
+        metricsService.recordRequest("GET", "/trainee/login");
+        Timer.Sample sample = Timer.start();
         log.info("GET /trainee/login - Attempting login for username: {}", username);
         LoginResults authenticated = traineeService.logIn(username, password);
 
 
         if(authenticated.equals(LoginResults.USER_NOT_FOUND)){
             log.warn("Login failed: user not found - {}", username);
+            sample.stop(metricsService.getRequestTimer());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Trainee with username of "+username+" not found");
         }else if(authenticated.equals(LoginResults.BAD_PASSWORD)){
             log.warn("Login failed: bad password for {}", username);
+            sample.stop(metricsService.getRequestTimer());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid Credentials");
         }
         log.info("Login successful for {}", username);
+        sample.stop(metricsService.getRequestTimer());
         return ResponseEntity.ok("Login successful");
     }
 
@@ -67,21 +81,27 @@ public class TraineeController {
     @PutMapping("/login/{username}")
     public ResponseEntity<String> changeLogin(@PathVariable String username,
                                               @RequestBody @Valid UserPasswordChangeDTO dto) {
+        metricsService.recordRequest("PUT", "/trainee/login/{username}");
+        Timer.Sample sample = Timer.start();
         log.info("PUT /trainee/login/{} - Changing password", username);
         Trainee trainee = traineeService.getTraineeByUsername(username);
         if (!trainee.getUser().getPassword().equals(dto.oldPassword())) {
             log.warn("Password change failed for {}: invalid current password", username);
+            sample.stop(metricsService.getRequestTimer());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid Credentials");
         }
 
         traineeService.changePassword(username, dto.newPassword());
         log.info("Password changed successfully for {}", username);
+        sample.stop(metricsService.getRequestTimer());
         return ResponseEntity.ok("Password changed successfully");
     }
 
     @Operation(summary = "Fetch full profile of the trainee by username")
     @GetMapping("/{username}")
     public ResponseEntity<TraineeProfileDTO> getTraineeProfile(@PathVariable String username) {
+        metricsService.recordRequest("GET", "/trainee/{username}");
+        Timer.Sample sample = Timer.start();
         log.info("GET /trainee/{} - Fetching profile", username);
 
         Trainee trainee = traineeService.getTraineeByUsername(username);
@@ -104,6 +124,7 @@ public class TraineeController {
         );
 
         log.info("Profile fetched for {}", username);
+        sample.stop(metricsService.getRequestTimer());
         return ResponseEntity.ok(profileDTO);
     }
 
@@ -111,14 +132,19 @@ public class TraineeController {
     @Operation(summary = "Delete a trainee by username")
     @DeleteMapping("/{username}")
     public ResponseEntity<String> deleteTrainee(@PathVariable String username) {
+        metricsService.recordRequest("DELETE", "/trainee/{username}");
+        Timer.Sample sample = Timer.start();
+
         log.info("DELETE /trainee/{} - Deleting trainee", username);
         boolean deleted = traineeService.deleteByUsername(username);
 
         if (deleted) {
             log.info("Trainee {} deleted successfully", username);
+            sample.stop(metricsService.getRequestTimer());
             return ResponseEntity.ok("Trainee with username " + username + " deleted successfully");
         } else {
             log.warn("Trainee {} not found", username);
+            sample.stop(metricsService.getRequestTimer());
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Trainee with username " + username + " not found");
         }
     }
@@ -127,6 +153,8 @@ public class TraineeController {
     @PutMapping("/{username}")
     public ResponseEntity<UpdateTraineeReturnDTO> updateTraineeProfile(@PathVariable String username,
                                                                  @RequestBody @Valid UpdateTraineeDTO dto){
+        metricsService.recordRequest("PUT", "/trainee/{username}");
+        Timer.Sample sample = Timer.start();
         log.info("PUT /trainee/{} - Updating trainee profile", username);
         Trainee updatedTrainee = traineeService.updateTraineeProfile(username,new UpdateTraineeDTO(
                 dto.firstName(),
@@ -145,6 +173,7 @@ public class TraineeController {
                 )).collect(Collectors.toSet());
 
         log.info("Profile updated for {}", username);
+        sample.stop(metricsService.getRequestTimer());
         return ResponseEntity.ok(new UpdateTraineeReturnDTO(
                 updatedTrainee.getUser().getUsername(),
                 updatedTrainee.getUser().getFirstName(),
@@ -162,9 +191,12 @@ public class TraineeController {
     @Operation(summary = "Toggle active/inactive status of the trainee")
     @PatchMapping("/{username}/status")
     public ResponseEntity<String> toggleActivity(@PathVariable String username){
+        metricsService.recordRequest("PATCH", "/trainee/{username}/status");
+        Timer.Sample sample = Timer.start();
         log.info("PATCH /trainee/{}/status - Toggling status", username);
         traineeService.toggleTraineeStatus(username);
         log.info("Trainee {} status toggled", username);
+        sample.stop(metricsService.getRequestTimer());
         return ResponseEntity.status(HttpStatus.OK).body("Trainee status toggled successfully");
 
     }
@@ -176,6 +208,8 @@ public class TraineeController {
             @PathVariable String username,
             @RequestBody Set<String> trainerUsernames
     ){
+        metricsService.recordRequest("PUT", "/trainee/{username}/trainers");
+        Timer.Sample sample = Timer.start();
         log.info("PUT /trainee/{}/trainers - Updating trainers list", username);
 
         List<TrainersListDTO> updatedTrainers = traineeService.updateTraineeTrainers(username, trainerUsernames)
@@ -188,6 +222,7 @@ public class TraineeController {
                 )).collect(Collectors.toList());
 
         log.info("Trainer list updated for {}", username);
+        sample.stop(metricsService.getRequestTimer());
         return ResponseEntity.ok(updatedTrainers);
 
 
@@ -198,6 +233,8 @@ public class TraineeController {
     public ResponseEntity<List<TrainingDTO>> getTraineeTrainings(@PathVariable String username,
                                                                  @ModelAttribute GetTrainingOptionsDTO options
     ){
+        metricsService.recordRequest("GET", "/trainee/{username}/trainings");
+        Timer.Sample sample = Timer.start();
         log.info("GET /trainee/{}/trainings - Fetching trainings with filters: {}", username, options);
         Trainee trainee = traineeService.getTraineeByUsername(username);
 
@@ -218,6 +255,7 @@ public class TraineeController {
                 ))
                 .collect(Collectors.toList());
         log.info("Fetched {} trainings for {}", trainings.size(), username);
+        sample.stop(metricsService.getRequestTimer());
         return ResponseEntity.ok(trainings);
 
 
