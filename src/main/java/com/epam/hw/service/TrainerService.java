@@ -49,12 +49,13 @@ public class TrainerService {
         }
     }
 
-    public Trainer createTrainer(String firstName,String lastName,String trainingTypeName) {
+    public Trainer createTrainer(String firstName,String lastName,String trainingTypeName,String password) {
 
         TrainingType trainingType = trainingTypeRepository.findByTrainingTypeName(trainingTypeName)
                 .orElseThrow(() -> new IllegalStateException("Training type " + trainingTypeName + " does not exist."));
 
         User user = new User(firstName,lastName);
+        user.setPassword(password);
 
         String baseUsername = user.getUsername();
         int num = 1;

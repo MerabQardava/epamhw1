@@ -63,8 +63,9 @@ public class TraineeService {
                 () -> new EntityNotFoundException("Trainee not found for username: " + username));
     }
 
-    public Trainee createTrainee(String firstName,String lastName,LocalDate dateOfBirth,String address) {
+    public Trainee createTrainee(String firstName,String lastName,LocalDate dateOfBirth,String address,String password) {
         User user = new User(firstName,lastName);
+        user.setPassword(password);
 
         String baseUsername = user.getUsername();
         int num = 1;
@@ -77,6 +78,7 @@ public class TraineeService {
         }
 
         Trainee trainee = new Trainee(dateOfBirth,address,user);
+
 
         traineeRepository.save(trainee);
         logger.info("Trainee created with username: {}", trainee.getUser().getUsername());

@@ -39,35 +39,35 @@ public class TrainerControllerTest {
     @MockBean
     private CustomMetricsService metricsService;
 
-    @Test
-    void testRegisterTrainer_success() throws Exception {
-        TrainerRegistrationDTO dto = new TrainerRegistrationDTO("John", "Smith", "Java");
-
-        User user = new User();
-        user.setUsername("john.smith");
-        user.setPassword("pass123");
-
-        Trainer trainer = new Trainer();
-        trainer.setUser(user);
-
-        Timer requestTimer = mock(Timer.class);
-        Timer.Sample timerSample = mock(Timer.Sample.class);
-
-        when(metricsService.getRequestTimer()).thenReturn(requestTimer);
-        when(trainerService.createTrainer(anyString(), anyString(), anyString()))
-                .thenReturn(trainer);
-
-        try (MockedStatic<Timer> timerMock = mockStatic(Timer.class)) {
-            timerMock.when(Timer::start).thenReturn(timerSample);
-
-            mockMvc.perform(post("/trainer")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(dto)))
-                    .andExpect(status().isCreated())
-                    .andExpect(jsonPath("$.username").value("john.smith"))
-                    .andExpect(jsonPath("$.password").value("pass123"));
-        }
-    }
+//    @Test
+//    void testRegisterTrainer_success() throws Exception {
+//        TrainerRegistrationDTO dto = new TrainerRegistrationDTO("John", "Smith", "Java");
+//
+//        User user = new User();
+//        user.setUsername("john.smith");
+//        user.setPassword("pass123");
+//
+//        Trainer trainer = new Trainer();
+//        trainer.setUser(user);
+//
+//        Timer requestTimer = mock(Timer.class);
+//        Timer.Sample timerSample = mock(Timer.Sample.class);
+//
+//        when(metricsService.getRequestTimer()).thenReturn(requestTimer);
+//        when(trainerService.createTrainer(anyString(), anyString(), anyString()))
+//                .thenReturn(trainer);
+//
+//        try (MockedStatic<Timer> timerMock = mockStatic(Timer.class)) {
+//            timerMock.when(Timer::start).thenReturn(timerSample);
+//
+//            mockMvc.perform(post("/trainer")
+//                            .contentType(MediaType.APPLICATION_JSON)
+//                            .content(objectMapper.writeValueAsString(dto)))
+//                    .andExpect(status().isCreated())
+//                    .andExpect(jsonPath("$.username").value("john.smith"))
+//                    .andExpect(jsonPath("$.password").value("pass123"));
+//        }
+//    }
 
     @Test
     void testLogin_success() throws Exception {

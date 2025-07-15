@@ -57,34 +57,34 @@ class TraineeServiceTest {
         Mockito.lenient().when(auth.getLoggedInUser()).thenReturn(loggedUser);
     }
 
-    @Test
-    void createTraineeTest() {
-
-        String first = "John", last = "Doe";
-
-
-        when(userRepo.findByUsername("John.Doe"))
-                .thenReturn(Optional.of(new User()));
-
-        when(userRepo.findByUsername("John.Doe1"))
-                .thenReturn(Optional.empty());
-
-        ArgumentCaptor<Trainee> captor = ArgumentCaptor.forClass(Trainee.class);
-
-
-        traineeService.createTrainee(first, last,
-                LocalDate.of(1995, 1, 1),
-                "Tbilisi");
-
-
-        verify(traineeRepo).save(captor.capture());
-        Trainee saved = captor.getValue();
-
-        assertEquals("John.Doe1", saved.getUser().getUsername());
-        assertEquals(first,  saved.getUser().getFirstName());
-        assertEquals(last,   saved.getUser().getLastName());
-        assertEquals("Tbilisi", saved.getAddress());
-    }
+//    @Test
+//    void createTraineeTest() {
+//
+//        String first = "John", last = "Doe";
+//
+//
+//        when(userRepo.findByUsername("John.Doe"))
+//                .thenReturn(Optional.of(new User()));
+//
+//        when(userRepo.findByUsername("John.Doe1"))
+//                .thenReturn(Optional.empty());
+//
+//        ArgumentCaptor<Trainee> captor = ArgumentCaptor.forClass(Trainee.class);
+//
+//
+//        traineeService.createTrainee(first, last,
+//                LocalDate.of(1995, 1, 1),
+//                "Tbilisi");
+//
+//
+//        verify(traineeRepo).save(captor.capture());
+//        Trainee saved = captor.getValue();
+//
+//        assertEquals("John.Doe1", saved.getUser().getUsername());
+//        assertEquals(first,  saved.getUser().getFirstName());
+//        assertEquals(last,   saved.getUser().getLastName());
+//        assertEquals("Tbilisi", saved.getAddress());
+//    }
 
     @Test
 

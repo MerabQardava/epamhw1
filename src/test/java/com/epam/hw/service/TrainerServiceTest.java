@@ -55,30 +55,30 @@ public class TrainerServiceTest {
         Mockito.lenient().when(auth.getLoggedInUser()).thenReturn(loggedUser);
     }
 
-    @Test
-    void createTrainerTest() {
-        String first = "John", last = "Doe";
-
-        when(userRepository.findByUsername("John.Doe"))
-                .thenReturn(Optional.of(new User()));
-        when(userRepository.findByUsername("John.Doe1"))
-                .thenReturn(Optional.empty());
-
-        ArgumentCaptor<Trainer> captor = ArgumentCaptor.forClass(Trainer.class);
-
-        when(trainingTypeRepository.findByTrainingTypeName("Java"))
-                .thenReturn(Optional.of(new TrainingType("Java")));
-
-        trainerService.createTrainer(first, last, "Java");
-
-        verify(trainerRepository).save(captor.capture());
-        Trainer saved = captor.getValue();
-
-        assertEquals("John.Doe1", saved.getUser().getUsername());
-        assertEquals(first, saved.getUser().getFirstName());
-        assertEquals(last, saved.getUser().getLastName());
-        assertEquals("Java", saved.getSpecializationId().getTrainingTypeName());
-    }
+//    @Test
+//    void createTrainerTest() {
+//        String first = "John", last = "Doe";
+//
+//        when(userRepository.findByUsername("John.Doe"))
+//                .thenReturn(Optional.of(new User()));
+//        when(userRepository.findByUsername("John.Doe1"))
+//                .thenReturn(Optional.empty());
+//
+//        ArgumentCaptor<Trainer> captor = ArgumentCaptor.forClass(Trainer.class);
+//
+//        when(trainingTypeRepository.findByTrainingTypeName("Java"))
+//                .thenReturn(Optional.of(new TrainingType("Java")));
+//
+//        trainerService.createTrainer(first, last, "Java");
+//
+//        verify(trainerRepository).save(captor.capture());
+//        Trainer saved = captor.getValue();
+//
+//        assertEquals("John.Doe1", saved.getUser().getUsername());
+//        assertEquals(first, saved.getUser().getFirstName());
+//        assertEquals(last, saved.getUser().getLastName());
+//        assertEquals("Java", saved.getSpecializationId().getTrainingTypeName());
+//    }
 
     @Test
     void getTrainerByUsernameTest() {

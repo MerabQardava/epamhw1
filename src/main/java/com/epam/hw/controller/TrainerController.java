@@ -41,7 +41,7 @@ public class TrainerController {
         metricsService.recordRequest("POST", "/trainer");
         Timer.Sample sample = Timer.start();
         log.info("POST /trainer - Registering new trainer: {} {}", dto.firstName(), dto.lastName());
-        Trainer saved = trainerService.createTrainer(dto.firstName(),dto.lastName(),dto.specialization());
+        Trainer saved = trainerService.createTrainer(dto.firstName(),dto.lastName(),dto.specialization(), dto.password());
         log.info("Trainer registered with username: {}", saved.getUser().getUsername());
         sample.stop(metricsService.getRequestTimer());
         return ResponseEntity.status(HttpStatus.CREATED).body(new CreateUserReturnDTO(

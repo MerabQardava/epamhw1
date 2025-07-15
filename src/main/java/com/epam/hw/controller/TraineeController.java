@@ -43,7 +43,7 @@ public class TraineeController {
         Timer.Sample sample = Timer.start();
 
         log.info("POST /trainee - Registering new trainee: {} {}", dto.firstName(), dto.lastName());
-        Trainee saved = traineeService.createTrainee(dto.firstName(), dto.lastName(),LocalDate.parse(dto.dob()),dto.address());
+        Trainee saved = traineeService.createTrainee(dto.firstName(), dto.lastName(),LocalDate.parse(dto.dob()),dto.address(),dto.password());
         log.info("Trainee registered successfully with username: {}", saved.getUser().getUsername());
 
         sample.stop(metricsService.getRequestTimer());
