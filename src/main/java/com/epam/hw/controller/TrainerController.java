@@ -3,11 +3,14 @@ package com.epam.hw.controller;
 import com.epam.hw.dto.*;
 import com.epam.hw.entity.Trainee;
 import com.epam.hw.entity.Trainer;
+import com.epam.hw.entity.User;
 import com.epam.hw.monitoring.CustomMetricsService;
 import com.epam.hw.service.TrainerService;
+import com.epam.hw.service.UserService;
 import com.epam.hw.storage.LoginResults;
 import io.micrometer.core.instrument.Timer;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
@@ -28,11 +31,13 @@ import java.util.stream.Collectors;
 public class TrainerController {
     private final TrainerService trainerService;
     private final CustomMetricsService metricsService;
+    private final UserService userService;
 
     @Autowired
-    public TrainerController(TrainerService trainerService, CustomMetricsService metricsService) {
+    public TrainerController(TrainerService trainerService, CustomMetricsService metricsService, UserService userService) {
         this.trainerService=trainerService;
         this.metricsService=metricsService;
+        this.userService=userService;
     }
 
     @Operation(summary = "Register a new trainer and return generated credentials")
@@ -41,13 +46,38 @@ public class TrainerController {
         metricsService.recordRequest("POST", "/trainer");
         Timer.Sample sample = Timer.start();
         log.info("POST /trainer - Registering new trainer: {} {}", dto.firstName(), dto.lastName());
-        Trainer saved = trainerService.createTrainer(dto.firstName(),dto.lastName(),dto.specialization(), dto.password());
+        Trainer saved = userService.register(dto.firstName(),dto.lastName(),dto.specialization(), dto.password());
         log.info("Trainer registered with username: {}", saved.getUser().getUsername());
         sample.stop(metricsService.getRequestTimer());
         return ResponseEntity.status(HttpStatus.CREATED).body(new CreateUserReturnDTO(
                 saved.getUser().getUsername(),
                 saved.getUser().getPassword()));
     }
+
+//    @Operation(summary = "Login a trainer using username and password")
+//    @GetMapping("/login")
+//    public ResponseEntity<String> loginTrainer(@RequestParam String username,
+//                                               @RequestParam String password){
+//        metricsService.recordRequest("GET", "/trainer/login");
+//        Timer.Sample sample = Timer.start();
+//        log.info("GET /trainer/login - Attempting login for: {}", username);
+//        LoginResults authenticated = trainerService.logIn(username, password);
+//
+//
+//        if(authenticated.equals(LoginResults.USER_NOT_FOUND)){
+//            log.warn("Login failed: Trainer not found - {}", username);
+//            sample.stop(metricsService.getRequestTimer());
+//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Trainer with username of "+username+" not found");
+//        }else if(authenticated.equals(LoginResults.BAD_PASSWORD)){
+//            log.warn("Login failed: Invalid password - {}", username);
+//            sample.stop(metricsService.getRequestTimer());
+//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid Credentials");
+//        }
+//        log.info("Login successful - {}", username);
+//        sample.stop(metricsService.getRequestTimer());
+//        return ResponseEntity.ok("Login successful");
+//
+//    }
 
     @Operation(summary = "Login a trainer using username and password")
     @GetMapping("/login")
@@ -56,27 +86,20 @@ public class TrainerController {
         metricsService.recordRequest("GET", "/trainer/login");
         Timer.Sample sample = Timer.start();
         log.info("GET /trainer/login - Attempting login for: {}", username);
-        LoginResults authenticated = trainerService.logIn(username, password);
+//        LoginResults authenticated = trainerService.logIn(username, password);
 
+        String token = userService.verify(username, password);
 
-        if(authenticated.equals(LoginResults.USER_NOT_FOUND)){
-            log.warn("Login failed: Trainer not found - {}", username);
-            sample.stop(metricsService.getRequestTimer());
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Trainer with username of "+username+" not found");
-        }else if(authenticated.equals(LoginResults.BAD_PASSWORD)){
-            log.warn("Login failed: Invalid password - {}", username);
-            sample.stop(metricsService.getRequestTimer());
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid Credentials");
-        }
-        log.info("Login successful - {}", username);
+        log.info("Login successful for {}", username);
         sample.stop(metricsService.getRequestTimer());
-        return ResponseEntity.ok("Login successful");
+        return ResponseEntity.ok(token);
 
     }
 
 
     @Operation(summary = "Change trainer password after verifying old password")
     @PutMapping("/login/{username}")
+    @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<String> changeLogin(@PathVariable String username,
                                               @RequestBody @Valid UserPasswordChangeDTO dto){
         metricsService.recordRequest("PUT", "/trainer/login/{username}");
@@ -100,6 +123,7 @@ public class TrainerController {
 
     @Operation(summary = "Get full profile of a trainer by username")
     @GetMapping("/{username}")
+    @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<TrainerProfileDTO> getTrainerProfile(@PathVariable String username) {
         metricsService.recordRequest("GET", "/trainer/{username}");
         Timer.Sample sample = Timer.start();
@@ -128,6 +152,7 @@ public class TrainerController {
 
     @Operation(summary = "Update profile details of a trainer")
     @PutMapping("/{username}")
+    @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<UpdateTrainerReturnDTO> updateTrainerProfile(@PathVariable String username,
                                                                        @RequestBody @Valid UpdateTrainerDTO dto){
         metricsService.recordRequest("PUT", "/trainer/{username}");
@@ -164,6 +189,7 @@ public class TrainerController {
 
     @Operation(summary = "Get list of trainers not yet assigned to the given trainee")
     @GetMapping("/unassigned-trainers/{traineeUsername}")
+    @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<Set<TrainersListDTO>> getUnassignedTrainers(@PathVariable String traineeUsername){
         metricsService.recordRequest("GET", "/trainer/unassigned-trainers/{traineeUsername}");
         Timer.Sample sample = Timer.start();
@@ -183,6 +209,7 @@ public class TrainerController {
 
     @Operation(summary = "Toggle active/inactive status of a trainer")
     @PatchMapping("/{username}/status")
+    @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<String> toggleActivity(@PathVariable String username){
         metricsService.recordRequest("PATCH", "/trainer/{username}/status");
         Timer.Sample sample = Timer.start();
@@ -195,6 +222,7 @@ public class TrainerController {
 
     @Operation(summary = "Get list of trainings conducted by the trainer, optionally filtered by date and trainee")
     @GetMapping("/{username}/trainings")
+    @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<List<TrainerTrainingDTO>> getTrainerTrainings(@PathVariable String username,
                                                                  @ModelAttribute GetTrainerTrainingOptionsDTO options
     ){

@@ -33,78 +33,29 @@ public class TraineeService {
     private final UserRepository userRepository;
     private final TrainerRepository trainerRepository;
     private final TrainingRepository trainingRepository;
-    private final Auth auth;
+
 
     @Autowired
     public TraineeService(TraineeRepository traineeRepository,
                           UserRepository userRepository,
                           TrainerRepository trainerRepository,
-                          TrainingRepository trainingRepository,
-                          Auth auth) {
+                          TrainingRepository trainingRepository) {
         this.traineeRepository = traineeRepository;
         this.userRepository = userRepository;
         this.trainerRepository = trainerRepository;
         this.trainingRepository = trainingRepository;
-        this.auth = auth;
     }
 
-    private void isLoggedIn() {
-        if (auth.getLoggedInUser() == null || auth.getLoggedInUser().getTrainee() == null) {
-            logger.warn("Unauthorized access attempt – no trainee is logged in.");
-            throw new IllegalStateException("No trainee is logged in.");
-        }
-    }
 
     public Trainee getTraineeByUsername(String username) {
-        isLoggedIn();
         logger.debug("Fetching trainee by username: {}", username);
 
         return traineeRepository.findByUser_Username(username).orElseThrow(
                 () -> new EntityNotFoundException("Trainee not found for username: " + username));
     }
 
-    public Trainee createTrainee(String firstName,String lastName,LocalDate dateOfBirth,String address,String password) {
-        User user = new User(firstName,lastName);
-        user.setPassword(password);
-
-        String baseUsername = user.getUsername();
-        int num = 1;
-
-        logger.debug("Creating new trainee with base username: {}", baseUsername);
-
-        while (userRepository.findByUsername(user.getUsername()).isPresent()) {
-            user.setUsername(baseUsername + num);
-            num++;
-        }
-
-        Trainee trainee = new Trainee(dateOfBirth,address,user);
-
-
-        traineeRepository.save(trainee);
-        logger.info("Trainee created with username: {}", trainee.getUser().getUsername());
-        return trainee;
-    }
-
-    public LoginResults logIn(String username, String password) {
-        logger.info("Attempting login for username: {}", username);
-
-        Optional<Trainee> traineeOpt = traineeRepository.findByUser_Username(username);
-        if (traineeOpt.isEmpty()) {
-            logger.info("Trainee not found: {}", username);
-            return LoginResults.USER_NOT_FOUND;
-        }
-
-        boolean ok = auth.logIn(username, password);
-        return ok ? LoginResults.SUCCESS : LoginResults.BAD_PASSWORD;
-    }
-
-    public boolean logOut() {
-        logger.info("Logging out current user.");
-        return auth.logOut();
-    }
 
     public boolean changePassword(String username,String newPassword) {
-        isLoggedIn();
         logger.info("Changing password for logged-in trainee.");
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new EntityNotFoundException("User not found: " + username));
@@ -120,7 +71,6 @@ public class TraineeService {
     }
 
     public Trainee updateTraineeProfile(String username,UpdateTraineeDTO updatedTraineeData) {
-        isLoggedIn();
 
         logger.info("Updating profile for logged-in trainee.");
 
@@ -151,7 +101,6 @@ public class TraineeService {
     }
 
     public boolean toggleTraineeStatus(String username) {
-        isLoggedIn();
         Trainee trainee = getTraineeByUsername(username);
 
         User user = trainee.getUser();
@@ -164,7 +113,6 @@ public class TraineeService {
     }
 
     public boolean deleteByUsername(String username) {
-        isLoggedIn();
         logger.warn("Deleting trainee with username: {}", username);
 
         Optional<User> optionalUser = userRepository.findByUsername(username);
@@ -187,7 +135,6 @@ public class TraineeService {
     }
 
     public Set<Trainer> updateTraineeTrainers(String username, Set<String> trainersList) {
-        isLoggedIn();
         logger.info("Updating trainers for traineeId: {}", username);
 
         Trainee trainee = getTraineeByUsername(username);
@@ -203,7 +150,6 @@ public class TraineeService {
     }
 
     public void addTrainerToTrainee(String traineeUsername, String trainerUsername) {
-        isLoggedIn();
         logger.info("Assigning trainer {} to trainee {}", trainerUsername, traineeUsername);
 
         Trainee trainee = traineeRepository.findByUser_Username(traineeUsername)
@@ -216,7 +162,6 @@ public class TraineeService {
     }
 
     public void removeTrainerFromTrainee(String traineeUsername, String trainerUsername) {
-        isLoggedIn();
         logger.info("Removing trainer {} from trainee {}", trainerUsername, traineeUsername);
 
         Trainee trainee = traineeRepository.findByUser_Username(traineeUsername)
@@ -234,7 +179,7 @@ public class TraineeService {
             LocalDate to,
             String trainerName,
             String trainingTypeName) {
-        isLoggedIn();
+
 
         logger.debug("Fetching trainings for trainee: {} from {} to {}, trainerName={}, trainingType={}",
                 username, from, to, trainerName, trainingTypeName);

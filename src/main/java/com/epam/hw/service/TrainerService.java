@@ -6,8 +6,6 @@ import com.epam.hw.repository.TrainerRepository;
 import com.epam.hw.repository.TrainingRepository;
 import com.epam.hw.repository.TrainingTypeRepository;
 import com.epam.hw.repository.UserRepository;
-import com.epam.hw.storage.Auth;
-import com.epam.hw.storage.LoginResults;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import org.slf4j.Logger;
@@ -27,71 +25,19 @@ public class TrainerService {
     private final TrainerRepository trainerRepository;
     private final UserRepository userRepository;
     private final TrainingRepository trainingRepository;
-    private final Auth auth;
-    private final TrainingTypeRepository trainingTypeRepository;
 
     @Autowired
     public TrainerService(TrainerRepository trainerRepository,
                           UserRepository userRepository,
-                          Auth auth,
-                          TrainingRepository trainingRepository, TrainingTypeRepository trainingTypeRepository) {
+                          TrainingRepository trainingRepository) {
         this.trainerRepository = trainerRepository;
         this.userRepository = userRepository;
-        this.auth = auth;
         this.trainingRepository = trainingRepository;
-        this.trainingTypeRepository = trainingTypeRepository;
     }
 
-    private void isLoggedIn() {
-        if (auth.getLoggedInUser() == null || auth.getLoggedInUser().getTrainer() == null) {
-            logger.warn("Unauthorized access attempt – no trainer is logged in.");
-            throw new IllegalStateException("No trainer is logged in.");
-        }
-    }
 
-    public Trainer createTrainer(String firstName,String lastName,String trainingTypeName,String password) {
-
-        TrainingType trainingType = trainingTypeRepository.findByTrainingTypeName(trainingTypeName)
-                .orElseThrow(() -> new IllegalStateException("Training type " + trainingTypeName + " does not exist."));
-
-        User user = new User(firstName,lastName);
-        user.setPassword(password);
-
-        String baseUsername = user.getUsername();
-        int num = 1;
-
-        while (userRepository.findByUsername(user.getUsername()).isPresent()) {
-            user.setUsername(baseUsername + num);
-            num++;
-        }
-
-        Trainer trainer = new Trainer(trainingType, user);
-
-        trainerRepository.save(trainer);
-        logger.info("Trainer created with username: {}", trainer.getUser().getUsername());
-        return trainer;
-    }
-
-    public LoginResults logIn(String username, String password) {
-        logger.info("Attempting login for username: {}", username);
-
-        Optional<Trainer> trainerOpt = trainerRepository.findByUser_Username(username);
-        if (trainerOpt.isEmpty()) {
-            logger.info("Trainer not found: {}", username);
-            return LoginResults.USER_NOT_FOUND;
-        }
-
-        boolean ok = auth.logIn(username, password);
-        return ok ? LoginResults.SUCCESS : LoginResults.BAD_PASSWORD;
-    }
-
-    public boolean logOut() {
-        logger.info("Trainer logout attempt.");
-        return auth.logOut();
-    }
 
     public Trainer getTrainerByUsername(String username) {
-        isLoggedIn();
         logger.debug("Fetching trainer by username: {}", username);
 
         return trainerRepository.findByUser_Username(username).orElseThrow(() -> {
@@ -101,7 +47,6 @@ public class TrainerService {
     }
 
     public boolean changePassword(String username, String newPassword) {
-        isLoggedIn();
         logger.info("Changing password for logged-in trainer.");
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new EntityNotFoundException("User not found: " + username));
@@ -117,7 +62,6 @@ public class TrainerService {
     }
 
     public boolean toggleTrainerStatus(String username) {
-        isLoggedIn();
         Trainer trainer = getTrainerByUsername(username);
 
         User user = trainer.getUser();
@@ -130,7 +74,6 @@ public class TrainerService {
     }
 
     public Trainer updateTrainerProfile(String username,UpdateTrainerDTO dto) {
-        isLoggedIn();
 
         Trainer trainer = getTrainerByUsername(username);
 
@@ -151,7 +94,6 @@ public class TrainerService {
     }
 
     public List<Training> getTrainerTrainings(String username, LocalDate from, LocalDate to, String trainerName) {
-        isLoggedIn();
         logger.debug("Fetching trainings for trainer: {} from {} to {} (name filter: {})",
                 username, from, to, trainerName);
 
@@ -159,7 +101,6 @@ public class TrainerService {
     }
 
     public List<Trainer> getUnassignedTraineeTrainers(String username) {
-        isLoggedIn();
         logger.debug("Fetching unassigned trainers for trainee: {}", username);
 
         Optional<User> user = userRepository.findByUsername(username);

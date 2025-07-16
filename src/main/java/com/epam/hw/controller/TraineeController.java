@@ -3,16 +3,20 @@ package com.epam.hw.controller;
 import com.epam.hw.dto.*;
 import com.epam.hw.entity.Trainee;
 import com.epam.hw.monitoring.CustomMetricsService;
+import com.epam.hw.repository.UserRepository;
 import com.epam.hw.service.TraineeService;
+import com.epam.hw.service.UserService;
 import com.epam.hw.storage.LoginResults;
 import io.micrometer.core.instrument.Timer;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -27,12 +31,16 @@ import java.util.stream.Collectors;
 public class TraineeController {
     private final TraineeService traineeService;
     private final CustomMetricsService metricsService;
+    private final UserService userService;
+    private final UserRepository userRepository;
 
 
     @Autowired
-    public TraineeController(TraineeService traineeService,CustomMetricsService metricsService) {
+    public TraineeController(TraineeService traineeService, CustomMetricsService metricsService, UserService userService, UserRepository userRepository) {
         this.traineeService = traineeService;
         this.metricsService = metricsService;
+        this.userService= userService;
+        this.userRepository = userRepository;
     }
 
 
@@ -43,7 +51,7 @@ public class TraineeController {
         Timer.Sample sample = Timer.start();
 
         log.info("POST /trainee - Registering new trainee: {} {}", dto.firstName(), dto.lastName());
-        Trainee saved = traineeService.createTrainee(dto.firstName(), dto.lastName(),LocalDate.parse(dto.dob()),dto.address(),dto.password());
+        Trainee saved = userService.register(dto.firstName(), dto.lastName(),LocalDate.parse(dto.dob()),dto.address(),dto.password());
         log.info("Trainee registered successfully with username: {}", saved.getUser().getUsername());
 
         sample.stop(metricsService.getRequestTimer());
@@ -53,6 +61,30 @@ public class TraineeController {
     }
 
 
+//    @Operation(summary = "Login a trainee with username and password")
+//    @GetMapping("/login")
+//    public ResponseEntity<String> loginTrainee(@RequestParam String username,
+//                                               @RequestParam String password){
+//        metricsService.recordRequest("GET", "/trainee/login");
+//        Timer.Sample sample = Timer.start();
+//        log.info("GET /trainee/login - Attempting login for username: {}", username);
+//        LoginResults authenticated = traineeService.logIn(username, password);
+//
+//
+//        if(authenticated.equals(LoginResults.USER_NOT_FOUND)){
+//            log.warn("Login failed: user not found - {}", username);
+//            sample.stop(metricsService.getRequestTimer());
+//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Trainee with username of "+username+" not found");
+//        }else if(authenticated.equals(LoginResults.BAD_PASSWORD)){
+//            log.warn("Login failed: bad password for {}", username);
+//            sample.stop(metricsService.getRequestTimer());
+//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid Credentials");
+//        }
+//        log.info("Login successful for {}", username);
+//        sample.stop(metricsService.getRequestTimer());
+//        return ResponseEntity.ok("Login successful");
+//    }
+
     @Operation(summary = "Login a trainee with username and password")
     @GetMapping("/login")
     public ResponseEntity<String> loginTrainee(@RequestParam String username,
@@ -60,25 +92,17 @@ public class TraineeController {
         metricsService.recordRequest("GET", "/trainee/login");
         Timer.Sample sample = Timer.start();
         log.info("GET /trainee/login - Attempting login for username: {}", username);
-        LoginResults authenticated = traineeService.logIn(username, password);
 
+        String token = userService.verify(username, password);
 
-        if(authenticated.equals(LoginResults.USER_NOT_FOUND)){
-            log.warn("Login failed: user not found - {}", username);
-            sample.stop(metricsService.getRequestTimer());
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Trainee with username of "+username+" not found");
-        }else if(authenticated.equals(LoginResults.BAD_PASSWORD)){
-            log.warn("Login failed: bad password for {}", username);
-            sample.stop(metricsService.getRequestTimer());
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid Credentials");
-        }
         log.info("Login successful for {}", username);
         sample.stop(metricsService.getRequestTimer());
-        return ResponseEntity.ok("Login successful");
+        return ResponseEntity.ok(token);
     }
 
     @Operation(summary = "Change trainee password after verifying current credentials")
     @PutMapping("/login/{username}")
+    @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<String> changeLogin(@PathVariable String username,
                                               @RequestBody @Valid UserPasswordChangeDTO dto) {
         metricsService.recordRequest("PUT", "/trainee/login/{username}");
@@ -99,6 +123,7 @@ public class TraineeController {
 
     @Operation(summary = "Fetch full profile of the trainee by username")
     @GetMapping("/{username}")
+    @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<TraineeProfileDTO> getTraineeProfile(@PathVariable String username) {
         metricsService.recordRequest("GET", "/trainee/{username}");
         Timer.Sample sample = Timer.start();
@@ -131,6 +156,7 @@ public class TraineeController {
 
     @Operation(summary = "Delete a trainee by username")
     @DeleteMapping("/{username}")
+    @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<String> deleteTrainee(@PathVariable String username) {
         metricsService.recordRequest("DELETE", "/trainee/{username}");
         Timer.Sample sample = Timer.start();
@@ -151,6 +177,7 @@ public class TraineeController {
 
     @Operation(summary = "Update the profile of an existing trainee")
     @PutMapping("/{username}")
+    @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<UpdateTraineeReturnDTO> updateTraineeProfile(@PathVariable String username,
                                                                  @RequestBody @Valid UpdateTraineeDTO dto){
         metricsService.recordRequest("PUT", "/trainee/{username}");
@@ -190,6 +217,7 @@ public class TraineeController {
 
     @Operation(summary = "Toggle active/inactive status of the trainee")
     @PatchMapping("/{username}/status")
+    @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<String> toggleActivity(@PathVariable String username){
         metricsService.recordRequest("PATCH", "/trainee/{username}/status");
         Timer.Sample sample = Timer.start();
@@ -204,6 +232,7 @@ public class TraineeController {
 
     @Operation(summary = "Update the list of trainers assigned to a trainee")
     @PutMapping("/{username}/trainers")
+    @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<List<TrainersListDTO>> updateTrainerList(
             @PathVariable String username,
             @RequestBody Set<String> trainerUsernames
@@ -230,6 +259,7 @@ public class TraineeController {
 
     @Operation(summary = "Get filtered training sessions of a trainee by date range, trainer or type")
     @GetMapping("/{username}/trainings")
+    @SecurityRequirement(name = "bearerAuth")
     public ResponseEntity<List<TrainingDTO>> getTraineeTrainings(@PathVariable String username,
                                                                  @ModelAttribute GetTrainingOptionsDTO options
     ){

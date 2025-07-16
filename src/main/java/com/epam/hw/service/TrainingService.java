@@ -29,30 +29,21 @@ public class TrainingService {
     private final TrainerRepository trainerRepo;
     private final TrainingTypeRepository trainingTypeRepo;
 
-    private final Auth auth;
 
     public TrainingService(TrainingRepository trainingRepo,
                            TraineeRepository traineeRepo,
                            TrainerRepository trainerRepo,
-                           TrainingTypeRepository trainingTypeRepo,
-                           Auth auth) {
+                           TrainingTypeRepository trainingTypeRepo){
         this.trainingRepo = trainingRepo;
         this.traineeRepo = traineeRepo;
         this.trainerRepo = trainerRepo;
         this.trainingTypeRepo = trainingTypeRepo;
-        this.auth=auth;
     }
 
 
-    private void isLoggedIn() {
-        if (auth.getLoggedInUser() == null) {
-            logger.warn("Unauthorized access attempt – no user is logged in.");
-            throw new IllegalStateException("No user is logged in.");
-        }
-    }
+
     @Transactional
     public Training addTraining(String traineeUsername, String trainerUsername, String trainingName, String trainingTypeName, LocalDate date, Integer duration) {
-        isLoggedIn();
 
         logger.debug("Attempting to add training for trainee={}, trainer={}, trainingType={}, date={}, duration={}",
                 traineeUsername, trainerUsername, trainingTypeName, date, duration);
@@ -80,9 +71,6 @@ public class TrainingService {
     }
 
     public List<TrainingType> getTrainingTypes(){
-        isLoggedIn();
-
         return trainingTypeRepo.findAll();
-
     }
 }
