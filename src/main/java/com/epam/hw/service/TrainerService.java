@@ -46,20 +46,6 @@ public class TrainerService {
         });
     }
 
-    public boolean changePassword(String username, String newPassword) {
-        logger.info("Changing password for logged-in trainer.");
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new EntityNotFoundException("User not found: " + username));
-
-        if(user.getTrainer()==null) {
-            logger.warn("User {} is not a trainer, cannot change password.", username);
-            throw new EntityNotFoundException("User is not a trainer: " + username);
-        }
-
-        user.setPassword(newPassword);
-        userRepository.save(user);
-        return true;
-    }
 
     public boolean toggleTrainerStatus(String username) {
         Trainer trainer = getTrainerByUsername(username);

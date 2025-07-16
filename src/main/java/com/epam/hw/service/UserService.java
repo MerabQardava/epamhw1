@@ -9,6 +9,7 @@ import com.epam.hw.repository.TraineeRepository;
 import com.epam.hw.repository.TrainerRepository;
 import com.epam.hw.repository.TrainingTypeRepository;
 import com.epam.hw.repository.UserRepository;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -106,6 +107,36 @@ public class UserService{
         }
 
         return "fail";
+    }
+
+    public boolean changeTraineePassword(String username,String newPassword) {
+        log.info("Changing password for logged-in trainee.");
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new EntityNotFoundException("User not found: " + username));
+
+        if(user.getTrainee()==null) {
+            log.warn("User {} is not a trainee, cannot change password.", username);
+            throw new EntityNotFoundException("User is not a trainee: " + username);
+        }
+
+        user.setPassword(encoder.encode(newPassword));
+        userRepository.save(user);
+        return true;
+    }
+
+    public boolean changeTrainerPassword(String username, String newPassword) {
+        log.info("Changing password for logged-in trainer.");
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new EntityNotFoundException("User not found: " + username));
+
+        if(user.getTrainer()==null) {
+            log.warn("User {} is not a trainer, cannot change password.", username);
+            throw new EntityNotFoundException("User is not a trainer: " + username);
+        }
+
+        user.setPassword(encoder.encode(newPassword));
+        userRepository.save(user);
+        return true;
     }
 
 

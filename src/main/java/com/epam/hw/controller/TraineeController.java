@@ -33,7 +33,7 @@ public class TraineeController {
     private final CustomMetricsService metricsService;
     private final UserService userService;
     private final UserRepository userRepository;
-
+    private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder(12);
 
     @Autowired
     public TraineeController(TraineeService traineeService, CustomMetricsService metricsService, UserService userService, UserRepository userRepository) {
@@ -61,29 +61,6 @@ public class TraineeController {
     }
 
 
-//    @Operation(summary = "Login a trainee with username and password")
-//    @GetMapping("/login")
-//    public ResponseEntity<String> loginTrainee(@RequestParam String username,
-//                                               @RequestParam String password){
-//        metricsService.recordRequest("GET", "/trainee/login");
-//        Timer.Sample sample = Timer.start();
-//        log.info("GET /trainee/login - Attempting login for username: {}", username);
-//        LoginResults authenticated = traineeService.logIn(username, password);
-//
-//
-//        if(authenticated.equals(LoginResults.USER_NOT_FOUND)){
-//            log.warn("Login failed: user not found - {}", username);
-//            sample.stop(metricsService.getRequestTimer());
-//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Trainee with username of "+username+" not found");
-//        }else if(authenticated.equals(LoginResults.BAD_PASSWORD)){
-//            log.warn("Login failed: bad password for {}", username);
-//            sample.stop(metricsService.getRequestTimer());
-//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid Credentials");
-//        }
-//        log.info("Login successful for {}", username);
-//        sample.stop(metricsService.getRequestTimer());
-//        return ResponseEntity.ok("Login successful");
-//    }
 
     @Operation(summary = "Login a trainee with username and password")
     @GetMapping("/login")
@@ -109,13 +86,12 @@ public class TraineeController {
         Timer.Sample sample = Timer.start();
         log.info("PUT /trainee/login/{} - Changing password", username);
         Trainee trainee = traineeService.getTraineeByUsername(username);
-        if (!trainee.getUser().getPassword().equals(dto.oldPassword())) {
+        if (!passwordEncoder.matches(dto.oldPassword(), trainee.getUser().getPassword())) {
             log.warn("Password change failed for {}: invalid current password", username);
-            sample.stop(metricsService.getRequestTimer());
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid Credentials");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid current password");
         }
 
-        traineeService.changePassword(username, dto.newPassword());
+        userService.changeTraineePassword(username, dto.newPassword());
         log.info("Password changed successfully for {}", username);
         sample.stop(metricsService.getRequestTimer());
         return ResponseEntity.ok("Password changed successfully");

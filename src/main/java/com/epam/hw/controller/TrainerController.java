@@ -18,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -32,6 +33,8 @@ public class TrainerController {
     private final TrainerService trainerService;
     private final CustomMetricsService metricsService;
     private final UserService userService;
+
+    private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder(12);
 
     @Autowired
     public TrainerController(TrainerService trainerService, CustomMetricsService metricsService, UserService userService) {
@@ -54,30 +57,7 @@ public class TrainerController {
                 saved.getUser().getPassword()));
     }
 
-//    @Operation(summary = "Login a trainer using username and password")
-//    @GetMapping("/login")
-//    public ResponseEntity<String> loginTrainer(@RequestParam String username,
-//                                               @RequestParam String password){
-//        metricsService.recordRequest("GET", "/trainer/login");
-//        Timer.Sample sample = Timer.start();
-//        log.info("GET /trainer/login - Attempting login for: {}", username);
-//        LoginResults authenticated = trainerService.logIn(username, password);
-//
-//
-//        if(authenticated.equals(LoginResults.USER_NOT_FOUND)){
-//            log.warn("Login failed: Trainer not found - {}", username);
-//            sample.stop(metricsService.getRequestTimer());
-//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Trainer with username of "+username+" not found");
-//        }else if(authenticated.equals(LoginResults.BAD_PASSWORD)){
-//            log.warn("Login failed: Invalid password - {}", username);
-//            sample.stop(metricsService.getRequestTimer());
-//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid Credentials");
-//        }
-//        log.info("Login successful - {}", username);
-//        sample.stop(metricsService.getRequestTimer());
-//        return ResponseEntity.ok("Login successful");
-//
-//    }
+
 
     @Operation(summary = "Login a trainer using username and password")
     @GetMapping("/login")
@@ -86,7 +66,6 @@ public class TrainerController {
         metricsService.recordRequest("GET", "/trainer/login");
         Timer.Sample sample = Timer.start();
         log.info("GET /trainer/login - Attempting login for: {}", username);
-//        LoginResults authenticated = trainerService.logIn(username, password);
 
         String token = userService.verify(username, password);
 
@@ -107,13 +86,12 @@ public class TrainerController {
         log.info("PUT /trainer/login/{} - Changing password", username);
         Trainer trainer = trainerService.getTrainerByUsername(username);
 
-        if (!trainer.getUser().getPassword().equals(dto.oldPassword())) {
-            log.warn("Password change failed for {}: Invalid old password", username);
-            sample.stop(metricsService.getRequestTimer());
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid Credentials");
+        if (!passwordEncoder.matches(dto.oldPassword(), trainer.getUser().getPassword())) {
+            log.warn("Password change failed for {}: invalid current password", username);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid current password");
         }
 
-        trainerService.changePassword(username, dto.newPassword());
+        userService.changeTrainerPassword(username, dto.newPassword());
         log.info("Password changed successfully for {}", username);
         sample.stop(metricsService.getRequestTimer());
         return ResponseEntity.ok("Password changed successfully");

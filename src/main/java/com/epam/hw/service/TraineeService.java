@@ -55,20 +55,6 @@ public class TraineeService {
     }
 
 
-    public boolean changePassword(String username,String newPassword) {
-        logger.info("Changing password for logged-in trainee.");
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new EntityNotFoundException("User not found: " + username));
-
-        if(user.getTrainee()==null) {
-            logger.warn("User {} is not a trainee, cannot change password.", username);
-            throw new EntityNotFoundException("User is not a trainee: " + username);
-        }
-
-        user.setPassword(newPassword);
-        userRepository.save(user);
-        return true;
-    }
 
     public Trainee updateTraineeProfile(String username,UpdateTraineeDTO updatedTraineeData) {
 
