@@ -4,6 +4,7 @@ import com.epam.hw.dto.*;
 import com.epam.hw.entity.Trainee;
 import com.epam.hw.monitoring.CustomMetricsService;
 import com.epam.hw.repository.UserRepository;
+import com.epam.hw.security.BruteForceProtectionService;
 import com.epam.hw.service.TraineeService;
 import com.epam.hw.service.UserService;
 import com.epam.hw.storage.LoginResults;
@@ -32,15 +33,18 @@ public class TraineeController {
     private final TraineeService traineeService;
     private final CustomMetricsService metricsService;
     private final UserService userService;
-    private final UserRepository userRepository;
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder(12);
+    private final BruteForceProtectionService bruteForceProtectionService;
 
     @Autowired
-    public TraineeController(TraineeService traineeService, CustomMetricsService metricsService, UserService userService, UserRepository userRepository) {
+    public TraineeController(TraineeService traineeService,
+                             CustomMetricsService metricsService,
+                             UserService userService,
+                             BruteForceProtectionService bruteForceProtectionService) {
         this.traineeService = traineeService;
         this.metricsService = metricsService;
         this.userService= userService;
-        this.userRepository = userRepository;
+        this.bruteForceProtectionService = bruteForceProtectionService;
     }
 
 
@@ -70,11 +74,23 @@ public class TraineeController {
         Timer.Sample sample = Timer.start();
         log.info("GET /trainee/login - Attempting login for username: {}", username);
 
-        String token = userService.verify(username, password);
+        if(bruteForceProtectionService.isBlocked(username)){
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Too many failed attempts. Please try again later.");
+        }
 
-        log.info("Login successful for {}", username);
-        sample.stop(metricsService.getRequestTimer());
-        return ResponseEntity.ok(token);
+        try {
+            String token = userService.verify(username, password);
+            log.info("Login successful for {}", username);
+            bruteForceProtectionService.recordSuccess(username);
+            sample.stop(metricsService.getRequestTimer());
+            return ResponseEntity.ok(token);
+        }catch (Exception e){
+            bruteForceProtectionService.recordFailedAttempt(username);
+            sample.stop(metricsService.getRequestTimer());
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
+        }
+
+
     }
 
     @Operation(summary = "Change trainee password after verifying current credentials")
