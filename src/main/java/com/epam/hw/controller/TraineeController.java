@@ -5,6 +5,7 @@ import com.epam.hw.entity.Trainee;
 import com.epam.hw.monitoring.CustomMetricsService;
 import com.epam.hw.repository.UserRepository;
 import com.epam.hw.security.BruteForceProtectionService;
+import com.epam.hw.security.TokenBlacklistService;
 import com.epam.hw.service.TraineeService;
 import com.epam.hw.service.UserService;
 import com.epam.hw.storage.LoginResults;
@@ -12,6 +13,7 @@ import io.micrometer.core.instrument.Timer;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +35,8 @@ public class TraineeController {
     private final TraineeService traineeService;
     private final CustomMetricsService metricsService;
     private final UserService userService;
+
+    private final TokenBlacklistService blacklistService;
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder(12);
     private final BruteForceProtectionService bruteForceProtectionService;
 
@@ -40,11 +44,14 @@ public class TraineeController {
     public TraineeController(TraineeService traineeService,
                              CustomMetricsService metricsService,
                              UserService userService,
-                             BruteForceProtectionService bruteForceProtectionService) {
+                             BruteForceProtectionService bruteForceProtectionService,
+                             TokenBlacklistService tokenBlacklistService
+    ) {
         this.traineeService = traineeService;
         this.metricsService = metricsService;
         this.userService= userService;
         this.bruteForceProtectionService = bruteForceProtectionService;
+        this.blacklistService=tokenBlacklistService;
     }
 
 
@@ -63,6 +70,8 @@ public class TraineeController {
                 saved.getUser().getUsername(),
                 saved.getUser().getPassword()));
     }
+
+
 
 
 
@@ -91,6 +100,21 @@ public class TraineeController {
         }
 
 
+    }
+
+    @Operation(summary = "Logout a trainee")
+    @PostMapping("/logout")
+    @SecurityRequirement(name = "bearerAuth")
+    public ResponseEntity<?> logout(HttpServletRequest request) {
+        String authHeader = request.getHeader("Authorization");
+
+        if(authHeader != null && authHeader.startsWith("Bearer ")) {
+            String token = authHeader.substring(7);
+            blacklistService.blacklistToken(token);
+            return ResponseEntity.ok("Logged out successfully");
+        }
+
+        return ResponseEntity.badRequest().body("No token provided");
     }
 
     @Operation(summary = "Change trainee password after verifying current credentials")

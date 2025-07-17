@@ -1,4 +1,4 @@
-package com.epam.hw.service;
+package com.epam.hw.security;
 
 import com.epam.hw.repository.UserRepository;
 import io.jsonwebtoken.Claims;

@@ -1,6 +1,5 @@
 package com.epam.hw.security;
 
-import com.epam.hw.service.JWTService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -22,6 +21,9 @@ public class JwtFilter extends OncePerRequestFilter {
     private JWTService jwtService;
 
     @Autowired
+    private TokenBlacklistService blacklistService;
+
+    @Autowired
     ApplicationContext context;
 
     @Override
@@ -32,6 +34,12 @@ public class JwtFilter extends OncePerRequestFilter {
 
         if(authHeader!=null && authHeader.startsWith("Bearer ")) {
             token = authHeader.substring(7);
+
+            if(blacklistService.isTokenBlacklisted(token)) {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                return;
+            }
+
             username=jwtService.extractUserName(token);
         }
 

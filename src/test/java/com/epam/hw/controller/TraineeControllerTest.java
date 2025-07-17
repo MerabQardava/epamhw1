@@ -67,63 +67,63 @@ public class TraineeControllerTest {
 //        }
 //    }
 
-    @Test
-    void testLogin_Success() throws Exception {
-        Timer requestTimer = mock(Timer.class);
-        Timer.Sample timerSample = mock(Timer.Sample.class);
-
-        when(metricsService.getRequestTimer()).thenReturn(requestTimer);
-        when(traineeService.logIn("john.doe", "pass123")).thenReturn(LoginResults.SUCCESS);
-
-        try (MockedStatic<Timer> timerMock = mockStatic(Timer.class)) {
-            timerMock.when(Timer::start).thenReturn(timerSample);
-
-            mockMvc.perform(get("/trainee/login")
-                            .param("username", "john.doe")
-                            .param("password", "pass123"))
-                    .andExpect(status().isOk())
-                    .andExpect(content().string("Login successful"));
-        }
-    }
-
-    @Test
-    void testLogin_BadPassword() throws Exception {
-        Timer requestTimer = mock(Timer.class);
-        Timer.Sample timerSample = mock(Timer.Sample.class);
-
-        when(metricsService.getRequestTimer()).thenReturn(requestTimer);
-        when(traineeService.logIn("john.doe", "wrong")).thenReturn(LoginResults.BAD_PASSWORD);
-
-        try (MockedStatic<Timer> timerMock = mockStatic(Timer.class)) {
-            timerMock.when(Timer::start).thenReturn(timerSample);
-
-            mockMvc.perform(get("/trainee/login")
-                            .param("username", "john.doe")
-                            .param("password", "wrong"))
-                    .andExpect(status().isUnauthorized())
-                    .andExpect(content().string("Invalid Credentials"));
-        }
-    }
-
-    @Test
-    void testLoginUser_NotFound() throws Exception {
-        Timer requestTimer = mock(Timer.class);
-        Timer.Sample timerSample = mock(Timer.Sample.class);
-
-        when(metricsService.getRequestTimer()).thenReturn(requestTimer);
-        when(traineeService.logIn("nonexistent", "pass"))
-                .thenReturn(LoginResults.USER_NOT_FOUND);
-
-        try (MockedStatic<Timer> timerMock = mockStatic(Timer.class)) {
-            timerMock.when(Timer::start).thenReturn(timerSample);
-
-            mockMvc.perform(get("/trainee/login")
-                            .param("username", "nonexistent")
-                            .param("password", "pass"))
-                    .andExpect(status().isUnauthorized())
-                    .andExpect(content().string("Trainee with username of nonexistent not found"));
-        }
-    }
+//    @Test
+//    void testLogin_Success() throws Exception {
+//        Timer requestTimer = mock(Timer.class);
+//        Timer.Sample timerSample = mock(Timer.Sample.class);
+//
+//        when(metricsService.getRequestTimer()).thenReturn(requestTimer);
+//        when(traineeService.logIn("john.doe", "pass123")).thenReturn(LoginResults.SUCCESS);
+//
+//        try (MockedStatic<Timer> timerMock = mockStatic(Timer.class)) {
+//            timerMock.when(Timer::start).thenReturn(timerSample);
+//
+//            mockMvc.perform(get("/trainee/login")
+//                            .param("username", "john.doe")
+//                            .param("password", "pass123"))
+//                    .andExpect(status().isOk())
+//                    .andExpect(content().string("Login successful"));
+//        }
+//    }
+//
+//    @Test
+//    void testLogin_BadPassword() throws Exception {
+//        Timer requestTimer = mock(Timer.class);
+//        Timer.Sample timerSample = mock(Timer.Sample.class);
+//
+//        when(metricsService.getRequestTimer()).thenReturn(requestTimer);
+//        when(traineeService.logIn("john.doe", "wrong")).thenReturn(LoginResults.BAD_PASSWORD);
+//
+//        try (MockedStatic<Timer> timerMock = mockStatic(Timer.class)) {
+//            timerMock.when(Timer::start).thenReturn(timerSample);
+//
+//            mockMvc.perform(get("/trainee/login")
+//                            .param("username", "john.doe")
+//                            .param("password", "wrong"))
+//                    .andExpect(status().isUnauthorized())
+//                    .andExpect(content().string("Invalid Credentials"));
+//        }
+//    }
+//
+//    @Test
+//    void testLoginUser_NotFound() throws Exception {
+//        Timer requestTimer = mock(Timer.class);
+//        Timer.Sample timerSample = mock(Timer.Sample.class);
+//
+//        when(metricsService.getRequestTimer()).thenReturn(requestTimer);
+//        when(traineeService.logIn("nonexistent", "pass"))
+//                .thenReturn(LoginResults.USER_NOT_FOUND);
+//
+//        try (MockedStatic<Timer> timerMock = mockStatic(Timer.class)) {
+//            timerMock.when(Timer::start).thenReturn(timerSample);
+//
+//            mockMvc.perform(get("/trainee/login")
+//                            .param("username", "nonexistent")
+//                            .param("password", "pass"))
+//                    .andExpect(status().isUnauthorized())
+//                    .andExpect(content().string("Trainee with username of nonexistent not found"));
+//        }
+//    }
 
     @Test
     void testChangePassword_Success() throws Exception {

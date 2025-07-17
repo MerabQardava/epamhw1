@@ -6,6 +6,7 @@ import com.epam.hw.entity.Trainer;
 import com.epam.hw.entity.User;
 import com.epam.hw.monitoring.CustomMetricsService;
 import com.epam.hw.security.BruteForceProtectionService;
+import com.epam.hw.security.TokenBlacklistService;
 import com.epam.hw.service.TrainerService;
 import com.epam.hw.service.UserService;
 import com.epam.hw.storage.LoginResults;
@@ -14,6 +15,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,18 +36,21 @@ public class TrainerController {
     private final TrainerService trainerService;
     private final CustomMetricsService metricsService;
     private final UserService userService;
-
+    private final TokenBlacklistService blacklistService;
     private final BruteForceProtectionService bruteForceProtectionService;
 
     private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder(12);
 
     @Autowired
     public TrainerController(TrainerService trainerService, CustomMetricsService metricsService, UserService userService,
-                             BruteForceProtectionService bruteForceProtectionService) {
+                             BruteForceProtectionService bruteForceProtectionService,
+                             TokenBlacklistService blacklistService
+    ) {
         this.trainerService=trainerService;
         this.metricsService=metricsService;
         this.userService=userService;
         this.bruteForceProtectionService = bruteForceProtectionService;
+        this.blacklistService = blacklistService;
     }
 
     @Operation(summary = "Register a new trainer and return generated credentials")
@@ -87,6 +92,21 @@ public class TrainerController {
             sample.stop(metricsService.getRequestTimer());
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
         }
+    }
+
+    @Operation(summary = "Logout a trainer")
+    @PostMapping("/logout")
+    @SecurityRequirement(name = "bearerAuth")
+    public ResponseEntity<?> logout(HttpServletRequest request) {
+        String authHeader = request.getHeader("Authorization");
+
+        if(authHeader != null && authHeader.startsWith("Bearer ")) {
+            String token = authHeader.substring(7);
+            blacklistService.blacklistToken(token);
+            return ResponseEntity.ok("Logged out successfully");
+        }
+
+        return ResponseEntity.badRequest().body("No token provided");
     }
 
 
